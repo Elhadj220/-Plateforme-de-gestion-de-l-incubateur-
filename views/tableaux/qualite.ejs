@@ -1,0 +1,54 @@
+<%- include('../partials/haut') %>
+<div class="conteneur">
+  <div class="titre-page">
+    <div>
+      <div class="fil"><a href="/tableau-de-bord">Tableau de bord</a> › Qualité des données</div>
+      <h1>Contrôle qualité des données</h1>
+      <p class="sous-titre">Règles de cohérence vérifiées automatiquement à chaque affichage.</p>
+    </div>
+  </div>
+
+  <div class="grille g-2">
+    <div class="carte">
+      <h2>Contrôles de cohérence</h2>
+      <div class="tableau-wrap">
+        <table>
+          <thead><tr><th>Code</th><th>Règle</th><th class="num">Anomalies</th></tr></thead>
+          <tbody>
+            <% q.controles.forEach(function (c) { %>
+              <tr>
+                <td><strong><%= c.code %></strong></td>
+                <td>
+                  <%= c.libelle %>
+                  <% if (c.lignes.length) { %>
+                    <details><summary class="petit">Voir les <%= c.lignes.length %> enregistrement(s)</summary>
+                      <ul class="petit" style="margin:6px 0 0;padding-left:18px">
+                        <% c.lignes.forEach(function (l) { %><li><a href="/projets/<%= l.id %>"><%= l.titre %></a></li><% }) %>
+                      </ul>
+                    </details>
+                  <% } %>
+                </td>
+                <td class="num"><span class="badge <%= c.lignes.length ? 'orange' : 'vert' %>"><%= c.lignes.length %></span></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="carte">
+      <h2>Complétude des champs (dossiers soumis)</h2>
+      <% const c = q.completudeChamps; const champs = [['Résumé', c.resume], ['Marché cible', c.marche], ['Modèle économique', c.modele], ['Besoin de financement', c.besoin], ["Stade d'avancement", c.stade]]; %>
+      <p class="petit muted"><%= c.n %> dossier(s) soumis analysé(s).</p>
+      <% champs.forEach(function (ch) { const pct = c.n ? Math.round(((ch[1] || 0) / c.n) * 100) : 0; %>
+        <div style="margin-bottom:12px">
+          <div class="ligne entre petit"><span><%= ch[0] %></span><strong><%= pct %> %</strong></div>
+          <div class="progression <%= pct === 100 ? 'vert' : '' %>"><div style="width:<%= pct %>%"></div></div>
+        </div>
+      <% }) %>
+      <div class="encart petit" style="margin-top:16px">
+        Les contrôles de saisie (formats, valeurs autorisées, champs obligatoires, contraintes de la base) empêchent la plupart des erreurs à la source. Les règles ci-contre détectent les incohérences de processus restantes, à corriger par le coordonnateur.
+      </div>
+    </div>
+  </div>
+</div>
+<%- include('../partials/bas') %>

@@ -1,0 +1,107 @@
+<%- include('../partials/haut') %>
+<div class="conteneur">
+  <div class="titre-page">
+    <div>
+      <div class="fil"><a href="/tableau-de-bord">Tableau de bord</a> › Analyses</div>
+      <h1>Tableau de bord analytique</h1>
+      <p class="sous-titre">Filtres : <%= libelle %></p>
+    </div>
+    <div class="ligne">
+      <a class="btn secondaire" href="/coordination/export.xlsx<%= query ? '?' + query : '' %>">Exporter en Excel</a>
+      <a class="btn" href="/coordination/export.pdf<%= query ? '?' + query : '' %>">Exporter en PDF</a>
+    </div>
+  </div>
+
+  <form class="carte filtres" method="get" action="/coordination/tableau-de-bord" style="margin-bottom:20px">
+    <div class="champ">
+      <label for="cohorte">Cohorte</label>
+      <select id="cohorte" name="cohorte">
+        <option value="">Toutes</option>
+        <% cohortes.forEach(function (c) { %><option value="<%= c.id %>" <%= String(filtres.cohorte) === String(c.id) ? 'selected' : '' %>><%= c.nom %></option><% }) %>
+      </select>
+    </div>
+    <div class="champ">
+      <label for="domaine">Domaine</label>
+      <select id="domaine" name="domaine">
+        <option value="">Tous</option>
+        <% ref.DOMAINES.forEach(function (d) { %><option <%= filtres.domaine === d ? 'selected' : '' %>><%= d %></option><% }) %>
+      </select>
+    </div>
+    <div class="champ"><label for="du">Soumis depuis le</label><input id="du" name="du" type="date" value="<%= filtres.du || '' %>"></div>
+    <div class="champ"><label for="au">Jusqu'au</label><input id="au" name="au" type="date" value="<%= filtres.au || '' %>"></div>
+    <div class="ligne">
+      <button class="btn" type="submit">Appliquer</button>
+      <a class="btn secondaire" href="/coordination/tableau-de-bord">Réinitialiser</a>
+    </div>
+  </form>
+
+  <% const k = d.kpi; %>
+  <h2>Sélection</h2>
+  <div class="grille g-4" style="margin-bottom:24px">
+    <div class="kpi"><div class="valeur"><%= k.recus %></div><div class="libelle">Dossiers reçus</div><div class="detail">Dossiers soumis (hors brouillons)</div></div>
+    <div class="kpi"><div class="valeur"><%= k.enAttente %></div><div class="libelle">En attente de décision</div><div class="detail">Statuts « soumis » et « en évaluation »</div></div>
+    <div class="kpi"><div class="valeur"><%= k.selectionnes %></div><div class="libelle">Projets sélectionnés</div><div class="detail">Retenus, en incubation ou terminés</div></div>
+    <div class="kpi"><div class="valeur"><%= k.tauxSelection %> %</div><div class="libelle">Taux de sélection</div><div class="detail">Sélectionnés / dossiers ayant reçu une décision</div></div>
+  </div>
+
+  <h2>Incubation et résultats</h2>
+  <div class="grille g-4" style="margin-bottom:24px">
+    <div class="kpi"><div class="valeur"><%= k.enIncubation %></div><div class="libelle">Projets en incubation</div><div class="detail"><%= k.termines %> sorti(s) d'incubation</div></div>
+    <div class="kpi"><div class="valeur"><%= k.prototypes %></div><div class="libelle">Projets incubés avec prototype</div><div class="detail">Stade prototype, pré-série ou commercialisation</div></div>
+    <div class="kpi <%= k.jalonsEnRetard ? 'alerte' : 'ok' %>"><div class="valeur"><%= k.jalonsEnRetard %></div><div class="libelle">Jalons en retard</div><div class="detail"><%= k.tauxJalonsValides %> % validés · <%= k.jalonsBientot %> dus sous 7 jours</div></div>
+    <div class="kpi"><div class="valeur"><%= formatMontant(k.financementTotal).replace(' FCFA', '') %></div><div class="libelle">Financements obtenus (FCFA)</div><div class="detail">Projets en incubation et terminés</div></div>
+    <div class="kpi <%= k.suivisEnRetard ? 'alerte' : 'ok' %>"><div class="valeur"><%= k.suivisEnRetard %></div><div class="libelle">Suivis post-incubation en retard</div><div class="detail"><%= k.suivisRealises %> réalisés · <%= k.suivisAVenir %> à venir</div></div>
+    <div class="kpi"><div class="valeur"><%= k.tauxActivite %> %</div><div class="libelle">Entreprises actives au suivi</div><div class="detail">Part des suivis réalisés avec activité « active »</div></div>
+    <div class="kpi"><div class="valeur"><%= k.emploisCrees %></div><div class="libelle">Emplois créés déclarés</div><div class="detail">Somme déclarée lors des suivis</div></div>
+    <div class="kpi"><div class="valeur"><%= k.projetsEnRetard %></div><div class="libelle">Projets avec retard</div><div class="detail">Au moins un jalon échu non validé</div></div>
+  </div>
+
+  <div class="grille g-2">
+    <div class="carte">
+      <div class="carte-titre"><h3>Projets par statut</h3><button class="btn petit secondaire" type="button" data-export-image="g-statuts">Image PNG</button></div>
+      <div class="graphique"><canvas id="g-statuts" role="img" aria-label="Nombre de projets par statut"></canvas></div>
+    </div>
+    <div class="carte">
+      <div class="carte-titre"><h3>Dossiers reçus et sélectionnés par domaine</h3><button class="btn petit secondaire" type="button" data-export-image="g-domaines">Image PNG</button></div>
+      <div class="graphique"><canvas id="g-domaines" role="img" aria-label="Dossiers par domaine"></canvas></div>
+    </div>
+    <div class="carte">
+      <div class="carte-titre"><h3>Comparaison des cohortes</h3><button class="btn petit secondaire" type="button" data-export-image="g-cohortes">Image PNG</button></div>
+      <div class="graphique"><canvas id="g-cohortes" role="img" aria-label="Projets incubés et score moyen par cohorte"></canvas></div>
+    </div>
+    <div class="carte">
+      <div class="carte-titre"><h3>Répartition des candidatures par genre</h3><button class="btn petit secondaire" type="button" data-export-image="g-genre">Image PNG</button></div>
+      <div class="graphique"><canvas id="g-genre" role="img" aria-label="Répartition par genre du porteur"></canvas></div>
+      <% const f = d.parGenre.find(function (g) { return g.genre === 'F'; }) || { recus: 0, selectionnes: 0 }; const m = d.parGenre.find(function (g) { return g.genre === 'M'; }) || { recus: 0, selectionnes: 0 }; %>
+      <p class="petit muted" style="margin-top:10px">Taux de sélection : femmes <%= f.recus ? Math.round((f.selectionnes / f.recus) * 100) : 0 %> % · hommes <%= m.recus ? Math.round((m.selectionnes / m.recus) * 100) : 0 %> % (sélectionnés / reçus).</p>
+    </div>
+    <div class="carte">
+      <div class="carte-titre"><h3>Dossiers soumis par mois (12 derniers mois)</h3><button class="btn petit secondaire" type="button" data-export-image="g-mois">Image PNG</button></div>
+      <div class="graphique"><canvas id="g-mois" role="img" aria-label="Dossiers soumis par mois"></canvas></div>
+    </div>
+    <div class="carte">
+      <div class="carte-titre"><h3>Avancement des projets en incubation</h3><button class="btn petit secondaire" type="button" data-export-image="g-avancement">Image PNG</button></div>
+      <div class="graphique"><canvas id="g-avancement" role="img" aria-label="Jalons validés et en retard par projet"></canvas></div>
+    </div>
+  </div>
+
+  <div class="carte" style="margin-top:18px">
+    <h3>Synthèse par cohorte</h3>
+    <div class="tableau-wrap">
+      <table class="responsive">
+        <thead><tr><th>Cohorte</th><th class="num">Projets</th><th class="num">Incubés</th><th class="num">Score moyen</th><th class="num">Financements obtenus</th></tr></thead>
+        <tbody>
+          <% d.parCohorte.forEach(function (c) { %>
+            <tr><td data-label="Cohorte"><%= c.nom %></td><td data-label="Projets" class="num"><%= c.projets %></td><td data-label="Incubés" class="num"><%= c.incubes || 0 %></td><td data-label="Score" class="num"><%= c.score_moyen ?? '—' %></td><td data-label="Financements" class="num"><%= formatMontant(c.financement) %></td></tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="encart" style="margin-top:18px">
+    <strong>Lecture et limites.</strong> Les indicateurs portent sur les données saisies dans la plateforme. Le financement et les emplois sont déclaratifs. Les taux calculés sur de petits effectifs (moins de 10 dossiers) doivent être interprétés avec prudence. Les définitions détaillées figurent dans le dictionnaire des indicateurs du rapport.
+  </div>
+</div>
+<script type="application/json" id="donnees-graphiques"><%- JSON.stringify({ parStatut: d.parStatut, parDomaine: d.parDomaine, parGenre: d.parGenre, parCohorte: d.parCohorte, parMois: d.parMois, avancementProjets: d.avancementProjets }).replace(/</g, '\\u003c') %></script>
+<%- include('../partials/bas', { scripts: ['/static/vendor/chart.umd.min.js', '/static/js/graphiques.js'] }) %>

@@ -1,0 +1,87 @@
+<%- include('../partials/haut') %>
+<div class="conteneur">
+  <div class="titre-page">
+    <div><h1>Bonjour <%= user.prenom %></h1><p class="sous-titre">Suivez votre candidature et votre parcours d'incubation.</p></div>
+    <a class="btn" href="/projets/nouveau">+ Déposer un nouveau dossier</a>
+  </div>
+  <%- include('../partials/flash') %>
+
+  <% if (retards.length) { %>
+    <div class="encart alerte" style="margin-bottom:18px" role="alert">
+      <strong><%= retards.length %> jalon(s) en retard.</strong>
+      <% retards.slice(0, 3).forEach(function (j) { %>
+        <div class="petit">« <%= j.titre %> » (<%= j.projet_titre %>) — échéance dépassée de <%= j.jours_retard %> jour(s). <a href="/projets/<%= j.projet_id %>?onglet=suivi#jalon-<%= j.id %>">Voir le jalon</a></div>
+      <% }) %>
+    </div>
+  <% } %>
+
+  <% if (!projets.length) { %>
+    <div class="carte vide">
+      <img src="/static/img/logo-symbole.svg" alt="" width="56" height="56">
+      <h2 style="margin-top:12px">Vous n'avez pas encore de dossier</h2>
+      <p>Décrivez votre projet, déposez les pièces demandées et soumettez votre candidature au comité de sélection.</p>
+      <a class="btn" href="/projets/nouveau">Commencer mon dossier</a>
+    </div>
+  <% } %>
+
+  <div class="grille g-21">
+    <div class="pile">
+      <% projets.forEach(function (p) { %>
+        <div class="carte">
+          <div class="carte-titre">
+            <h2><a href="/projets/<%= p.id %>" style="text-decoration:none"><%= p.titre %></a></h2>
+            <%- include('../partials/statut', { statut: p.statut }) %>
+          </div>
+          <p class="muted petit"><%= p.domaine %><% if (p.cohorte_nom) { %> · <%= p.cohorte_nom %><% } %><% if (p.mentor_nom) { %> · Mentor : <%= p.mentor_nom %><% } %></p>
+          <% if (['brouillon', 'ajourne'].includes(p.statut)) { %>
+            <div class="ligne entre petit"><span>Complétude du dossier</span><strong><%= p.completude.pourcentage %> %</strong></div>
+            <div class="progression"><div style="width:<%= p.completude.pourcentage %>%"></div></div>
+            <% if (!p.completude.complet) { %>
+              <p class="petit muted" style="margin-top:8px">À compléter : <%= p.completude.manquants.join(' ; ') %></p>
+            <% } else { %>
+              <p class="petit" style="margin-top:8px;color:var(--vert)">Votre dossier est complet : vous pouvez le soumettre.</p>
+            <% } %>
+            <a class="btn petit" href="/projets/<%= p.id %>">Compléter et soumettre</a>
+          <% } else if (['soumis', 'en_evaluation'].includes(p.statut)) { %>
+            <p class="petit">Dossier soumis le <strong><%= formatDate(p.date_soumission) %></strong>. Le comité de sélection l'examine ; vous serez informé(e) de la décision sur cette plateforme.</p>
+          <% } else if (p.statut === 'en_incubation') { %>
+            <div class="ligne entre petit"><span>Avancement des jalons</span><strong><%= p.avancement.valides %> / <%= p.avancement.total %> validés</strong></div>
+            <div class="progression"><div style="width:<%= p.avancement.pourcentage %>%"></div></div>
+            <a class="btn petit secondaire" href="/projets/<%= p.id %>?onglet=suivi" style="margin-top:12px">Suivi du projet</a>
+          <% } else if (p.statut === 'refuse') { %>
+            <p class="petit">Votre dossier n'a pas été retenu. Consultez la motivation de la décision sur la fiche du projet.</p>
+          <% } else if (p.statut === 'retenu') { %>
+            <p class="petit">Félicitations, votre projet est retenu ! L'affectation de votre mentor est en cours.</p>
+          <% } else if (p.statut === 'termine') { %>
+            <p class="petit">Incubation terminée le <%= formatDate(p.date_sortie) %>. Le CIAT assure un suivi à 3 et 6 mois.</p>
+          <% } %>
+        </div>
+      <% }) %>
+    </div>
+    <aside class="pile">
+      <div class="carte">
+        <h3>Prochaines échéances</h3>
+        <% if (!prochains.length) { %><p class="muted petit mb-0">Aucun jalon à venir.</p><% } %>
+        <ul class="liste">
+          <% prochains.forEach(function (j) { %>
+            <li>
+              <a href="/projets/<%= j.projet_id %>?onglet=suivi#jalon-<%= j.id %>"><strong><%= j.titre %></strong></a>
+              <div class="petit muted"><%= formatDate(j.date_echeance) %> · <span class="badge <%= j.date_echeance < today ? 'rouge' : ref.STATUTS_JALON[j.statut].classe %>"><%= j.date_echeance < today ? 'En retard' : ref.STATUTS_JALON[j.statut].libelle %></span></div>
+            </li>
+          <% }) %>
+        </ul>
+      </div>
+      <div class="carte">
+        <h3>Le parcours en bref</h3>
+        <ol class="petit" style="padding-left:18px;margin:0">
+          <li>Remplir le dossier et déposer les pièces</li>
+          <li>Soumettre au comité de sélection</li>
+          <li>Décision motivée du comité</li>
+          <li>Incubation avec un mentor : objectifs et jalons</li>
+          <li>Suivi à 3 et 6 mois après la sortie</li>
+        </ol>
+      </div>
+    </aside>
+  </div>
+</div>
+<%- include('../partials/bas') %>

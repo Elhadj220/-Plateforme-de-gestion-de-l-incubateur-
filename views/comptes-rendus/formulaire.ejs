@@ -1,0 +1,71 @@
+<%- include('../partials/haut') %>
+<div class="conteneur">
+  <div class="fil"><a href="/projets/<%= p.id %>?onglet=comptes-rendus"><%= p.titre %></a> › Compte rendu</div>
+  <div class="titre-page"><div><h1><%= titre %></h1><p class="sous-titre"><%= p.titre %></p></div></div>
+  <%- include('../partials/flash') %>
+
+  <div class="grille g-21">
+    <div class="pile">
+      <% if (etape === 'notes') { %>
+        <form method="post" action="/projets/<%= p.id %>/comptes-rendus/generer" class="carte" style="border-top:4px solid #5B3A8E">
+          <input type="hidden" name="_csrf" value="<%= csrf %>">
+          <div class="carte-titre"><h2>1. Générer un brouillon avec l'IA</h2><span class="badge ia">IA générative</span></div>
+          <div class="champ">
+            <label for="type_ia">Type de document</label>
+            <select id="type_ia" name="type_cr">
+              <% types.forEach(function (t) { %><option value="<%= t %>" <%= v.type_cr === t ? 'selected' : '' %>><%= ref.TYPES_CR[t] %></option><% }) %>
+            </select>
+          </div>
+          <div class="champ">
+            <label for="notes">Vos notes (facultatif)</label>
+            <textarea id="notes" name="notes" maxlength="4000" placeholder="Points abordés, décisions, actions convenues… L'IA s'appuie aussi sur les jalons, objectifs et échanges enregistrés."><%= v.notes %></textarea>
+            <div class="aide">N'indiquez pas de données personnelles sensibles (santé, coordonnées) : elles ne sont pas nécessaires.</div>
+          </div>
+          <button class="btn ia" type="submit" data-chargement="Rédaction en cours…">Générer le brouillon</button>
+        </form>
+        <p class="centre muted petit">ou</p>
+      <% } %>
+
+      <form method="post" action="<%= typeof crId !== 'undefined' ? '/comptes-rendus/' + crId + '/modifier' : '/projets/' + p.id + '/comptes-rendus' %>" class="carte" novalidate>
+        <input type="hidden" name="_csrf" value="<%= csrf %>">
+        <input type="hidden" name="genere_par_ia" value="<%= v.genere_par_ia ? 1 : 0 %>">
+        <h2><%= etape === 'notes' ? '2. Rédiger directement' : etape === 'relecture' ? 'Relire et corriger le brouillon' : 'Modifier le contenu' %></h2>
+        <% if (etape === 'relecture' && v.genere_par_ia) { %>
+          <div class="encart ia petit" style="margin-bottom:14px"><strong>Vérification humaine obligatoire.</strong> Contrôlez les faits, les chiffres et les dates par rapport au dossier, retirez toute formulation inexacte, puis enregistrez. Le document reste un brouillon jusqu'à sa validation.</div>
+        <% } %>
+        <div class="grille g-2" style="gap:0 16px">
+          <div class="champ">
+            <label for="type_cr">Type</label>
+            <select id="type_cr" name="type_cr" <%= etape === 'modification' ? 'disabled' : '' %>>
+              <% types.forEach(function (t) { %><option value="<%= t %>" <%= v.type_cr === t ? 'selected' : '' %>><%= ref.TYPES_CR[t] %></option><% }) %>
+            </select>
+          </div>
+          <div class="champ">
+            <label for="titre_cr" class="obligatoire">Titre</label>
+            <input id="titre_cr" name="titre" type="text" maxlength="200" value="<%= v.titre %>">
+          </div>
+        </div>
+        <div class="champ">
+          <label for="contenu" class="obligatoire">Contenu</label>
+          <textarea id="contenu" name="contenu" class="grand" maxlength="20000" data-compteur="50"><%= v.contenu %></textarea>
+          <div class="aide">Mise en forme : « ## Titre de section », « - élément de liste », « **texte en gras** ».</div>
+        </div>
+        <div class="actions">
+          <button class="btn" type="submit">Enregistrer</button>
+          <a class="btn secondaire" href="/projets/<%= p.id %>?onglet=comptes-rendus">Annuler</a>
+        </div>
+      </form>
+    </div>
+    <aside class="carte">
+      <h3>Comment ça marche ?</h3>
+      <ol class="petit" style="padding-left:18px">
+        <li>L'IA rédige un brouillon à partir des données du projet (sans nom ni coordonnées) et de vos notes.</li>
+        <li>Vous relisez et corrigez le texte.</li>
+        <li>Vous enregistrez : le document est un <strong>brouillon</strong>.</li>
+        <li>Le mentor ou le coordonnateur le <strong>valide</strong> ; il devient alors visible par le porteur (sauf PV du comité) et exportable en PDF.</li>
+      </ol>
+      <p class="petit muted mb-0">Chaque appel à l'IA est tracé dans le journal de l'IA.</p>
+    </aside>
+  </div>
+</div>
+<%- include('../partials/bas') %>

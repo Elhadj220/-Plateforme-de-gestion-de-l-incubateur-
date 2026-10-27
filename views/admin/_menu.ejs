@@ -1,0 +1,5 @@
+<nav class="onglets" aria-label="Administration">
+  <% [['/admin/utilisateurs', 'Utilisateurs'], ['/admin/cohortes', 'Cohortes'], ['/admin/grille', "Grille d'évaluation"], ['/admin/journal-ia', "Journal de l'IA"], ['/admin/journal', "Journal d'activité"], ['/coordination/qualite', 'Qualité des données']].forEach(function (l) { %>
+    <a href="<%= l[0] %>" class="<%= chemin === l[0] ? 'actif' : '' %>"><%= l[1] %></a>
+  <% }) %>
+</nav>

@@ -1,0 +1,60 @@
+<%- include('../partials/haut') %>
+<div class="conteneur">
+  <div class="titre-page">
+    <div><h1>Espace mentor</h1><p class="sous-titre">Projets que vous accompagnez, jalons à valider et retards.</p></div>
+  </div>
+  <%- include('../partials/flash') %>
+
+  <div class="grille g-3" style="margin-bottom:20px">
+    <div class="kpi"><div class="valeur"><%= projets.filter(function (p) { return p.statut === 'en_incubation'; }).length %></div><div class="libelle">Projets en incubation</div></div>
+    <div class="kpi <%= aValider.length ? '' : 'ok' %>"><div class="valeur"><%= aValider.length %></div><div class="libelle">Jalons à valider</div></div>
+    <div class="kpi <%= retards.length ? 'alerte' : 'ok' %>"><div class="valeur"><%= retards.length %></div><div class="libelle">Jalons en retard</div><a href="/alertes" aria-label="Voir les alertes"></a></div>
+  </div>
+
+  <div class="grille g-21">
+    <div class="carte">
+      <h2>Mes projets</h2>
+      <% if (!projets.length) { %><p class="muted">Aucun projet ne vous est encore affecté.</p><% } else { %>
+      <div class="tableau-wrap">
+        <table class="responsive">
+          <thead><tr><th>Projet</th><th>Porteur</th><th>Statut</th><th>Avancement</th></tr></thead>
+          <tbody>
+            <% projets.forEach(function (p) { %>
+              <tr>
+                <td data-label="Projet"><a href="/projets/<%= p.id %>?onglet=suivi"><strong><%= p.titre %></strong></a><div class="petit muted"><%= p.cohorte_nom || '' %></div></td>
+                <td data-label="Porteur"><%= p.porteur_nom %></td>
+                <td data-label="Statut"><%- include('../partials/statut', { statut: p.statut }) %></td>
+                <td data-label="Avancement" style="min-width:140px">
+                  <div class="petit"><%= p.avancement.valides %> / <%= p.avancement.total %> jalons</div>
+                  <div class="progression"><div style="width:<%= p.avancement.pourcentage %>%"></div></div>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+      <% } %>
+    </div>
+    <aside class="pile">
+      <div class="carte">
+        <h3>Jalons soumis à valider</h3>
+        <% if (!aValider.length) { %><p class="muted petit mb-0">Rien à valider pour le moment.</p><% } %>
+        <ul class="liste">
+          <% aValider.forEach(function (j) { %>
+            <li><a href="/projets/<%= j.projet_id %>?onglet=suivi#jalon-<%= j.id %>"><strong><%= j.titre %></strong></a><div class="petit muted"><%= j.projet_titre %> · échéance <%= formatDate(j.date_echeance) %></div></li>
+          <% }) %>
+        </ul>
+      </div>
+      <div class="carte">
+        <h3>Retards</h3>
+        <% if (!retards.length) { %><p class="muted petit mb-0">Aucun retard.</p><% } %>
+        <ul class="liste">
+          <% retards.forEach(function (j) { %>
+            <li><a href="/projets/<%= j.projet_id %>?onglet=suivi#jalon-<%= j.id %>"><strong><%= j.titre %></strong></a><div class="petit muted"><%= j.projet_titre %> · <span class="badge rouge"><%= j.jours_retard %> j de retard</span></div></li>
+          <% }) %>
+        </ul>
+      </div>
+    </aside>
+  </div>
+</div>
+<%- include('../partials/bas') %>

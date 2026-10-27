@@ -1,0 +1,87 @@
+<%- include('../partials/haut') %>
+<div class="conteneur">
+  <div class="titre-page">
+    <div><h1>Espace coordonnateur</h1><p class="sous-titre">Vue d'ensemble de l'incubateur et actions à mener.</p></div>
+    <div class="ligne">
+      <a class="btn secondaire" href="/coordination/qualite">Qualité des données</a>
+      <a class="btn" href="/coordination/tableau-de-bord">Tableau de bord analytique</a>
+    </div>
+  </div>
+  <%- include('../partials/flash') %>
+
+  <div class="grille g-4" style="margin-bottom:20px">
+    <div class="kpi"><div class="valeur"><%= k.recus %></div><div class="libelle">Dossiers reçus</div><div class="detail"><%= k.enAttente %> en attente de décision</div><a href="/projets" aria-label="Voir les projets"></a></div>
+    <div class="kpi"><div class="valeur"><%= k.tauxSelection %> %</div><div class="libelle">Taux de sélection</div><div class="detail"><%= k.selectionnes %> projets sélectionnés</div></div>
+    <div class="kpi"><div class="valeur"><%= k.enIncubation %></div><div class="libelle">Projets en incubation</div><div class="detail"><%= k.tauxJalonsValides %> % des jalons validés</div><a href="/projets?statut=en_incubation" aria-label="Voir les projets en incubation"></a></div>
+    <div class="kpi <%= k.jalonsEnRetard ? 'alerte' : 'ok' %>"><div class="valeur"><%= k.jalonsEnRetard %></div><div class="libelle">Jalons en retard</div><div class="detail"><%= k.projetsEnRetard %> projet(s) concerné(s)</div><a href="/alertes" aria-label="Voir les alertes"></a></div>
+  </div>
+
+  <div class="grille g-2">
+    <div class="carte">
+      <div class="carte-titre"><h2>Dossiers en attente de décision</h2><span class="badge brun"><%= aDecider.length %></span></div>
+      <% if (!aDecider.length) { %><p class="muted mb-0">Aucun dossier en attente.</p><% } else { %>
+      <ul class="liste">
+        <% aDecider.forEach(function (p) { %>
+          <li class="ligne entre">
+            <div>
+              <a href="/projets/<%= p.id %>?onglet=evaluation"><strong><%= p.titre %></strong></a>
+              <div class="petit muted"><%= p.porteur_nom %> · soumis le <%= formatDate(p.date_soumission) %></div>
+            </div>
+            <div class="ligne">
+              <span class="badge <%= p.nb_eval >= 2 ? 'vert' : p.nb_eval ? 'orange' : 'gris' %>"><%= p.nb_eval %> éval.</span>
+              <% if (p.score_moyen !== null) { %><span class="badge brun"><%= p.score_moyen %>/100</span><% } %>
+            </div>
+          </li>
+        <% }) %>
+      </ul>
+      <% } %>
+    </div>
+
+    <div class="pile">
+      <div class="carte">
+        <div class="carte-titre"><h2>Projets retenus sans mentor</h2><span class="badge brun"><%= sansMentor.length %></span></div>
+        <% if (!sansMentor.length) { %><p class="muted mb-0">Tous les projets retenus ont un mentor.</p><% } %>
+        <ul class="liste">
+          <% sansMentor.forEach(function (p) { %>
+            <li class="ligne entre"><a href="/projets/<%= p.id %>?onglet=evaluation#mentor"><strong><%= p.titre %></strong></a><span class="petit muted"><%= p.cohorte_nom %></span></li>
+          <% }) %>
+        </ul>
+      </div>
+      <div class="carte">
+        <div class="carte-titre"><h2>Suivis post-incubation à réaliser</h2><span class="badge brun"><%= suivisDus.length %></span></div>
+        <% if (!suivisDus.length) { %><p class="muted mb-0">Aucun suivi dû dans les 30 prochains jours.</p><% } %>
+        <ul class="liste">
+          <% suivisDus.forEach(function (s) { %>
+            <li class="ligne entre">
+              <a href="/projets/<%= s.projet_id %>?onglet=suivi#suivis"><strong><%= s.titre %></strong></a>
+              <span class="badge <%= s.date_prevue < today ? 'rouge' : 'orange' %>"><%= ref.ECHEANCES_SUIVI[s.echeance] %> · <%= formatDate(s.date_prevue) %></span>
+            </li>
+          <% }) %>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="carte" style="margin-top:18px">
+    <div class="carte-titre"><h2>Jalons en retard</h2><a class="btn petit secondaire" href="/alertes">Toutes les alertes</a></div>
+    <% if (!retards.length) { %><p class="muted mb-0">Aucun jalon en retard.</p><% } else { %>
+    <div class="tableau-wrap">
+      <table class="responsive">
+        <thead><tr><th>Projet</th><th>Jalon</th><th>Échéance</th><th class="num">Retard</th><th>Statut</th></tr></thead>
+        <tbody>
+          <% retards.forEach(function (j) { %>
+            <tr>
+              <td data-label="Projet"><a href="/projets/<%= j.projet_id %>?onglet=suivi"><%= j.projet_titre %></a></td>
+              <td data-label="Jalon"><%= j.titre %></td>
+              <td data-label="Échéance"><%= formatDate(j.date_echeance) %></td>
+              <td data-label="Retard" class="num"><span class="badge rouge"><%= j.jours_retard %> j</span></td>
+              <td data-label="Statut"><span class="badge <%= ref.STATUTS_JALON[j.statut].classe %>"><%= ref.STATUTS_JALON[j.statut].libelle %></span></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+    <% } %>
+  </div>
+</div>
+<%- include('../partials/bas') %>

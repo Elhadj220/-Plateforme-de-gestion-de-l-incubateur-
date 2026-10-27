@@ -1,0 +1,64 @@
+<%- include('../partials/haut') %>
+<div class="auth large">
+  <div class="carte">
+    <h1>Créer un compte porteur de projet</h1>
+    <p class="muted">Ce compte vous permet de déposer votre dossier de candidature et de suivre votre parcours d'incubation.</p>
+    <%- include('../partials/flash') %>
+    <form method="post" action="/inscription" novalidate>
+      <input type="hidden" name="_csrf" value="<%= csrf %>">
+      <div class="grille g-2" style="gap:0 16px">
+        <div class="champ <%= erreurs.prenom ? 'erreur' : '' %>">
+          <label for="prenom" class="obligatoire">Prénom</label>
+          <input id="prenom" name="prenom" type="text" maxlength="60" required autocomplete="given-name" value="<%= v.prenom || '' %>">
+          <%- include('../partials/champ-erreur', { nom: 'prenom' }) %>
+        </div>
+        <div class="champ <%= erreurs.nom ? 'erreur' : '' %>">
+          <label for="nom" class="obligatoire">Nom</label>
+          <input id="nom" name="nom" type="text" maxlength="60" required autocomplete="family-name" value="<%= v.nom || '' %>">
+          <%- include('../partials/champ-erreur', { nom: 'nom' }) %>
+        </div>
+        <div class="champ <%= erreurs.email ? 'erreur' : '' %>">
+          <label for="email" class="obligatoire">Adresse e-mail</label>
+          <input id="email" name="email" type="email" maxlength="120" required autocomplete="email" value="<%= v.email || '' %>">
+          <%- include('../partials/champ-erreur', { nom: 'email' }) %>
+        </div>
+        <div class="champ <%= erreurs.telephone ? 'erreur' : '' %>">
+          <label for="telephone">Téléphone</label>
+          <input id="telephone" name="telephone" type="tel" maxlength="20" autocomplete="tel" placeholder="+221 77 123 45 67" value="<%= v.telephone || '' %>">
+          <%- include('../partials/champ-erreur', { nom: 'telephone' }) %>
+        </div>
+        <div class="champ <%= erreurs.genre ? 'erreur' : '' %>">
+          <label for="genre">Genre</label>
+          <select id="genre" name="genre">
+            <option value="">Je préfère ne pas répondre</option>
+            <option value="F" <%= v.genre === 'F' ? 'selected' : '' %>>Femme</option>
+            <option value="M" <%= v.genre === 'M' ? 'selected' : '' %>>Homme</option>
+          </select>
+          <div class="aide">Utilisé uniquement pour les statistiques agrégées sur l'égalité d'accès.</div>
+        </div>
+        <div class="champ <%= erreurs.structure ? 'erreur' : '' %>">
+          <label for="structure">Établissement ou structure</label>
+          <input id="structure" name="structure" type="text" maxlength="120" value="<%= v.structure || '' %>">
+        </div>
+        <div class="champ <%= erreurs.mot_de_passe ? 'erreur' : '' %>">
+          <label for="mot_de_passe" class="obligatoire">Mot de passe</label>
+          <input id="mot_de_passe" name="mot_de_passe" type="password" required autocomplete="new-password" aria-describedby="aide-mdp">
+          <div class="aide" id="aide-mdp">8 caractères minimum, avec au moins une lettre et un chiffre.</div>
+          <%- include('../partials/champ-erreur', { nom: 'mot_de_passe' }) %>
+        </div>
+        <div class="champ <%= erreurs.confirmation ? 'erreur' : '' %>">
+          <label for="confirmation" class="obligatoire">Confirmation du mot de passe</label>
+          <input id="confirmation" name="confirmation" type="password" required autocomplete="new-password">
+          <%- include('../partials/champ-erreur', { nom: 'confirmation' }) %>
+        </div>
+      </div>
+      <div class="champ <%= erreurs.consentement ? 'erreur' : '' %>">
+        <label class="case"><input type="checkbox" name="consentement" value="1"> J'accepte que mes données soient traitées par le CIAT pour la gestion de ma candidature et de mon accompagnement (<a href="/ia-et-donnees" target="_blank" rel="noopener">en savoir plus</a>).</label>
+        <%- include('../partials/champ-erreur', { nom: 'consentement' }) %>
+      </div>
+      <button class="btn bloc" type="submit">Créer mon compte</button>
+    </form>
+    <p class="centre petit" style="margin-top:14px">Déjà inscrit ? <a href="/connexion">Se connecter</a></p>
+  </div>
+</div>
+<%- include('../partials/bas') %>

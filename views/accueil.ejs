@@ -1,0 +1,58 @@
+<%- include('partials/haut') %>
+<section class="heros">
+  <div class="heros-int">
+    <div>
+      <p class="petit" style="letter-spacing:.12em;text-transform:uppercase;color:var(--camel-clair);font-weight:600">CIAT · ISEP Amadou Trawaré de Diamniadio</p>
+      <h1>De l'idée à l'entreprise, <em>un parcours d'incubation suivi pas à pas.</em></h1>
+      <p>Incub'ISEP centralise le dépôt des dossiers, l'évaluation par le comité de sélection, le mentorat, les jalons et le suivi des projets jusqu'à six mois après leur sortie de l'incubateur.</p>
+      <div class="actions">
+        <a class="btn camel" href="/inscription">Déposer ma candidature</a>
+        <a class="btn secondaire" href="/connexion">Se connecter</a>
+      </div>
+    </div>
+    <div class="heros-carte">
+      <div class="grille g-3" style="gap:10px">
+        <div><div class="chiffre"><%= chiffres.candidatures || 0 %></div><div class="petit">dossiers reçus</div></div>
+        <div><div class="chiffre"><%= chiffres.incubes || 0 %></div><div class="petit">projets incubés</div></div>
+        <div><div class="chiffre"><%= chiffres.cohortes || 0 %></div><div class="petit">cohortes</div></div>
+      </div>
+      <hr style="border:0;border-top:1px solid rgba(255,255,255,.18);margin:18px 0">
+      <p class="petit" style="margin:0">Domaines prioritaires : numérique et IA, mécanique, agriculture et environnement, énergies renouvelables, pharmaceutique et biomédical, éducation et insertion, services aux collectivités.</p>
+    </div>
+  </div>
+</section>
+
+<div class="conteneur">
+  <h2>Le parcours d'incubation</h2>
+  <ol class="etapes">
+    <li><h3>Candidature</h3><p>Créez votre compte, décrivez votre projet et déposez les pièces demandées. Le contrôle de complétude vous guide.</p></li>
+    <li><h3>Sélection</h3><p>Le comité évalue votre dossier selon une grille pondérée et rend une décision motivée.</p></li>
+    <li><h3>Mentorat</h3><p>Un mentor vous est affecté. Ensemble, vous fixez les objectifs et le calendrier des jalons.</p></li>
+    <li><h3>Suivi</h3><p>Déposez les preuves de réalisation, échangez avec votre mentor, recevez les alertes de retard.</p></li>
+    <li><h3>Après l'incubation</h3><p>Le CIAT reste à vos côtés avec un suivi à trois et à six mois.</p></li>
+  </ol>
+
+  <div class="grille g-3" style="margin-top:28px">
+    <div class="carte accent">
+      <h3>Pièces à préparer</h3>
+      <ul class="check">
+        <li>Pièce d'identité du porteur</li>
+        <li>CV du porteur</li>
+        <li>Fiche projet</li>
+        <li>Business plan et support de pitch (facultatifs)</li>
+      </ul>
+      <p class="petit muted mb-0">Formats acceptés : PDF, Word, Excel, PowerPoint, images JPG/PNG (5 Mo maximum).</p>
+    </div>
+    <div class="carte accent">
+      <h3>Une IA au service des équipes</h3>
+      <p>L'IA générative aide le comité à préparer l'analyse des dossiers et les mentors à rédiger les comptes rendus et à proposer des jalons.</p>
+      <p class="petit muted mb-0">Chaque production de l'IA est relue et validée par un humain. <a href="/ia-et-donnees">En savoir plus</a></p>
+    </div>
+    <div class="carte accent">
+      <h3>Vos données protégées</h3>
+      <p>Accès selon votre rôle, mots de passe chiffrés, documents stockés hors de l'espace public et téléchargeables uniquement par les personnes habilitées.</p>
+      <p class="petit muted mb-0">Aucune donnée d'identification n'est transmise au service d'IA.</p>
+    </div>
+  </div>
+</div>
+<%- include('partials/bas') %>

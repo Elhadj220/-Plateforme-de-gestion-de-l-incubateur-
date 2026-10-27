@@ -1,0 +1,22 @@
+<%- include('../partials/haut') %>
+<div class="conteneur">
+  <div class="titre-page"><div><h1>Administration</h1><p class="sous-titre">Journal des actions importantes (300 dernières).</p></div></div>
+  <%- include('_menu') %>
+  <div class="tableau-wrap">
+    <table class="responsive">
+      <thead><tr><th>Date</th><th>Utilisateur</th><th>Action</th><th>Projet</th><th>Détails</th></tr></thead>
+      <tbody>
+        <% actions.forEach(function (a) { %>
+          <tr>
+            <td data-label="Date" class="petit"><%= formatDateHeure(a.cree_le) %></td>
+            <td data-label="Utilisateur"><%= a.utilisateur || '—' %></td>
+            <td data-label="Action"><code><%= a.action %></code></td>
+            <td data-label="Projet"><% if (a.projet_id) { %><a href="/projets/<%= a.projet_id %>"><%= a.projet_titre %></a><% } else { %>—<% } %></td>
+            <td data-label="Détails" class="petit"><%= a.details || '' %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+<%- include('../partials/bas') %>

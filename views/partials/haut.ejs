@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= titre ? titre + ' · ' : '' %>Incub'ISEP — Incubateur du CIAT</title>
+  <meta name="description" content="Plateforme de gestion de l'incubateur du CIAT de l'ISEP Amadou Trawaré de Diamniadio.">
+  <link rel="icon" href="/static/img/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700&display=swap">
+  <link rel="stylesheet" href="/static/css/app.css">
+</head>
+<body>
+<a class="lien-evitement" href="#contenu">Aller au contenu</a>
+<header class="entete">
+  <div class="entete-int">
+    <a class="marque" href="/" aria-label="Accueil Incub'ISEP"><img src="/static/img/logo.svg" alt="Incub'ISEP" width="188" height="40"></a>
+    <button class="burger" type="button" aria-controls="nav-principale" aria-expanded="false" aria-label="Ouvrir le menu"><span></span><span></span><span></span></button>
+    <nav class="nav" id="nav-principale" aria-label="Navigation principale">
+      <% const lien = (href, libelle, extra) => `<a href="${href}" class="${chemin === href || (href !== '/' && chemin.startsWith(href + '/')) ? 'actif' : ''}">${libelle}${extra || ''}</a>`; %>
+      <% if (user) { %>
+        <%- lien('/tableau-de-bord', 'Tableau de bord') %>
+        <% if (user.role === 'porteur') { %>
+          <%- lien('/projets', 'Mes projets') %>
+          <%- lien('/projets/nouveau', 'Déposer un dossier') %>
+        <% } else if (user.role === 'evaluateur') { %>
+          <%- lien('/projets', 'Dossiers') %>
+        <% } else if (user.role === 'mentor') { %>
+          <%- lien('/projets', 'Mes projets') %>
+          <%- lien('/comptes-rendus', 'Comptes rendus') %>
+        <% } else { %>
+          <%- lien('/projets', 'Projets') %>
+          <%- lien('/coordination/tableau-de-bord', 'Analyses') %>
+          <%- lien('/comptes-rendus', 'Comptes rendus') %>
+          <%- lien('/admin/utilisateurs', 'Administration') %>
+        <% } %>
+        <% if (user.role !== 'evaluateur') { %>
+          <%- lien('/alertes', 'Alertes', nbAlertes ? `<span class="pastille" aria-label="${nbAlertes} jalon(s) en retard">${nbAlertes}</span>` : '') %>
+        <% } %>
+        <span class="espace"></span>
+        <div class="utilisateur">
+          <span class="avatar" aria-hidden="true"><%= (user.prenom[0] + user.nom[0]).toUpperCase() %></span>
+          <a href="/profil" style="padding:0;background:none"><strong><%= user.prenom %> <%= user.nom %></strong><small><%= ref.ROLES[user.role] %></small></a>
+          <form method="post" action="/deconnexion" class="en-ligne">
+            <input type="hidden" name="_csrf" value="<%= csrf %>">
+            <button class="btn secondaire petit" type="submit">Déconnexion</button>
+          </form>
+        </div>
+      <% } else { %>
+        <%- lien('/', 'Accueil') %>
+        <%- lien('/ia-et-donnees', 'IA et données') %>
+        <span class="espace"></span>
+        <a href="/connexion" class="<%= chemin === '/connexion' ? 'actif' : '' %>">Connexion</a>
+        <a href="/inscription" class="btn camel petit" style="color:var(--brun)">Créer un compte porteur</a>
+      <% } %>
+    </nav>
+  </div>
+</header>
+<main id="contenu">

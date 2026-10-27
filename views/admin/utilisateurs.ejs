@@ -1,0 +1,69 @@
+<%- include('../partials/haut') %>
+<div class="conteneur">
+  <div class="titre-page"><div><h1>Administration</h1><p class="sous-titre">Comptes, rôles et droits d'accès.</p></div></div>
+  <%- include('_menu') %>
+  <%- include('../partials/flash') %>
+
+  <div class="grille g-21">
+    <div>
+      <form method="get" action="/admin/utilisateurs" class="ligne" style="margin-bottom:12px">
+        <label for="role-filtre" class="sr-only">Filtrer par rôle</label>
+        <select id="role-filtre" name="role" style="max-width:260px">
+          <option value="">Tous les rôles</option>
+          <% Object.entries(ref.ROLES).forEach(function (r) { %><option value="<%= r[0] %>" <%= role === r[0] ? 'selected' : '' %>><%= r[1] %></option><% }) %>
+        </select>
+        <button class="btn secondaire" type="submit">Filtrer</button>
+        <span class="muted petit"><%= utilisateurs.length %> compte(s)</span>
+      </form>
+      <div class="tableau-wrap">
+        <table class="responsive">
+          <thead><tr><th>Nom</th><th>Rôle</th><th>Activité</th><th>Dernière connexion</th><th>Statut</th><th></th></tr></thead>
+          <tbody>
+            <% utilisateurs.forEach(function (u) { %>
+              <tr>
+                <td data-label="Nom"><strong><%= u.prenom %> <%= u.nom %></strong><div class="petit muted"><%= u.email %></div></td>
+                <td data-label="Rôle"><%= ref.ROLES[u.role] %></td>
+                <td data-label="Activité" class="petit"><%= u.role === 'porteur' ? u.nb_projets + ' projet(s)' : u.role === 'mentor' ? u.nb_mentores + ' projet(s) suivi(s)' : u.expertise || '—' %></td>
+                <td data-label="Connexion" class="petit"><%= u.derniere_connexion ? formatDateHeure(u.derniere_connexion) : 'Jamais' %></td>
+                <td data-label="Statut"><span class="badge <%= u.actif ? 'vert' : 'gris' %>"><%= u.actif ? 'Actif' : 'Désactivé' %></span></td>
+                <td>
+                  <% if (u.id !== user.id) { %>
+                  <div class="ligne">
+                    <form method="post" action="/admin/utilisateurs/<%= u.id %>/activer" class="en-ligne" data-confirmer="<%= u.actif ? 'Désactiver' : 'Réactiver' %> le compte de <%= u.prenom %> <%= u.nom %> ?">
+                      <input type="hidden" name="_csrf" value="<%= csrf %>">
+                      <button class="btn petit <%= u.actif ? 'danger' : 'secondaire' %>" type="submit"><%= u.actif ? 'Désactiver' : 'Réactiver' %></button>
+                    </form>
+                    <form method="post" action="/admin/utilisateurs/<%= u.id %>/reinitialiser" class="en-ligne" data-confirmer="Générer un nouveau mot de passe provisoire pour <%= u.prenom %> <%= u.nom %> ?">
+                      <input type="hidden" name="_csrf" value="<%= csrf %>">
+                      <button class="btn petit secondaire" type="submit">Nouveau mot de passe</button>
+                    </form>
+                  </div>
+                  <% } %>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <aside class="carte">
+      <h2>Créer un compte</h2>
+      <p class="petit muted">Pour les mentors, membres du comité et coordonnateurs. Les porteurs créent eux-mêmes leur compte.</p>
+      <form method="post" action="/admin/utilisateurs" novalidate>
+        <input type="hidden" name="_csrf" value="<%= csrf %>">
+        <div class="champ <%= erreurs.prenom ? 'erreur' : '' %>"><label for="a-prenom" class="obligatoire">Prénom</label><input id="a-prenom" name="prenom" type="text" maxlength="60" value="<%= v.prenom || '' %>"><%- include('../partials/champ-erreur', { nom: 'prenom' }) %></div>
+        <div class="champ <%= erreurs.nom ? 'erreur' : '' %>"><label for="a-nom" class="obligatoire">Nom</label><input id="a-nom" name="nom" type="text" maxlength="60" value="<%= v.nom || '' %>"><%- include('../partials/champ-erreur', { nom: 'nom' }) %></div>
+        <div class="champ <%= erreurs.email ? 'erreur' : '' %>"><label for="a-email" class="obligatoire">E-mail</label><input id="a-email" name="email" type="email" maxlength="120" value="<%= v.email || '' %>"><%- include('../partials/champ-erreur', { nom: 'email' }) %></div>
+        <div class="champ <%= erreurs.role ? 'erreur' : '' %>"><label for="a-role" class="obligatoire">Rôle</label>
+          <select id="a-role" name="role"><% Object.entries(ref.ROLES).forEach(function (r) { %><option value="<%= r[0] %>" <%= v.role === r[0] ? 'selected' : '' %>><%= r[1] %></option><% }) %></select>
+          <%- include('../partials/champ-erreur', { nom: 'role' }) %></div>
+        <div class="champ"><label for="a-genre">Genre</label><select id="a-genre" name="genre"><option value="">Non renseigné</option><option value="F" <%= v.genre === 'F' ? 'selected' : '' %>>Femme</option><option value="M" <%= v.genre === 'M' ? 'selected' : '' %>>Homme</option></select></div>
+        <div class="champ"><label for="a-exp">Expertise</label><input id="a-exp" name="expertise" type="text" maxlength="200" value="<%= v.expertise || '' %>"></div>
+        <div class="champ"><label for="a-str">Structure</label><input id="a-str" name="structure" type="text" maxlength="120" value="<%= v.structure || '' %>"></div>
+        <button class="btn bloc" type="submit">Créer le compte</button>
+        <p class="petit muted" style="margin-top:8px">Un mot de passe provisoire est généré et affiché une seule fois.</p>
+      </form>
+    </aside>
+  </div>
+</div>
+<%- include('../partials/bas') %>

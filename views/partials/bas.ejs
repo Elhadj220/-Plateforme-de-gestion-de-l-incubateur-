@@ -1,0 +1,11 @@
+</main>
+<footer class="pied">
+  <div class="pied-int">
+    <span>© <%= new Date().getFullYear() %> CIAT — Centre d'Innovation, d'Application et de Transfert · ISEP Amadou Trawaré de Diamniadio</span>
+    <span><a href="/ia-et-donnees">Usage de l'IA et protection des données</a></span>
+  </div>
+</footer>
+<script src="/static/js/app.js"></script>
+<% if (typeof scripts !== 'undefined') { scripts.forEach(function (s) { %><script src="<%= s %>"></script><% }) } %>
+</body>
+</html>

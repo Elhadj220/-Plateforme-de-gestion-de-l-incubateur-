@@ -1,0 +1,33 @@
+{
+  "name": "incub-isep",
+  "version": "1.0.0",
+  "description": "Incub'ISEP - Plateforme de gestion de l'incubateur du CIAT (ISEP Amadou Trawaré de Diamniadio)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node --disable-warning=ExperimentalWarning server.js",
+    "dev": "node --disable-warning=ExperimentalWarning --watch server.js",
+    "seed": "node --disable-warning=ExperimentalWarning src/db/seed.js",
+    "test": "node --disable-warning=ExperimentalWarning --test \"tests/**/*.test.js\""
+  },
+  "author": "Équipe projet - ISEP Amadou Trawaré",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "chart.js": "^4.6.1",
+    "cookie-session": "^2.1.1",
+    "dotenv": "^18.0.9",
+    "ejs": "^7.0.2",
+    "exceljs": "^4.4.0",
+    "express": "^4.22.3",
+    "helmet": "^8.3.0",
+    "multer": "^2.5.0",
+    "pdfkit": "^0.20.2"
+  },
+  "private": true,
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "overrides": {
+    "uuid": "^11.1.0"
+  }
+}

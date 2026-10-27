@@ -1,0 +1,35 @@
+<%- include('../partials/haut') %>
+<div class="conteneur">
+  <div class="titre-page"><div><h1>Administration</h1><p class="sous-titre">Cohortes d'incubation.</p></div></div>
+  <%- include('_menu') %>
+  <%- include('../partials/flash') %>
+  <div class="grille g-21">
+    <div class="tableau-wrap">
+      <table class="responsive">
+        <thead><tr><th>Cohorte</th><th>Début</th><th>Fin</th><th class="num">Projets</th><th>État</th></tr></thead>
+        <tbody>
+          <% const t = aujourdhui(); cohortes.forEach(function (c) { %>
+            <tr>
+              <td data-label="Cohorte"><a href="/projets?cohorte=<%= c.id %>"><strong><%= c.nom %></strong></a></td>
+              <td data-label="Début"><%= formatDate(c.date_debut) %></td>
+              <td data-label="Fin"><%= formatDate(c.date_fin) %></td>
+              <td data-label="Projets" class="num"><%= c.nb_projets %></td>
+              <td data-label="État"><span class="badge <%= c.date_debut > t ? 'bleu' : c.date_fin < t ? 'gris' : 'vert' %>"><%= c.date_debut > t ? 'À venir' : c.date_fin < t ? 'Terminée' : 'En cours' %></span></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+    <aside class="carte">
+      <h2>Nouvelle cohorte</h2>
+      <form method="post" action="/admin/cohortes" novalidate>
+        <input type="hidden" name="_csrf" value="<%= csrf %>">
+        <div class="champ"><label for="c-nom" class="obligatoire">Nom</label><input id="c-nom" name="nom" type="text" maxlength="40" placeholder="Cohorte 2027-A" required></div>
+        <div class="champ"><label for="c-debut" class="obligatoire">Date de début</label><input id="c-debut" name="date_debut" type="date" required></div>
+        <div class="champ"><label for="c-fin" class="obligatoire">Date de fin</label><input id="c-fin" name="date_fin" type="date" required></div>
+        <button class="btn bloc" type="submit">Créer</button>
+      </form>
+    </aside>
+  </div>
+</div>
+<%- include('../partials/bas') %>

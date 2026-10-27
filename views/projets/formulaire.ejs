@@ -1,0 +1,83 @@
+<%- include('../partials/haut') %>
+<div class="conteneur etroit">
+  <div class="fil"><a href="/tableau-de-bord">Mon espace</a> › <%= titre %></div>
+  <h1><%= titre %></h1>
+  <p class="muted">Les champs marqués d'un astérisque sont nécessaires pour enregistrer le brouillon. Tous les champs du dossier doivent être remplis avant la soumission ; vous pouvez enregistrer et revenir plus tard.</p>
+  <%- include('../partials/flash') %>
+  <% if (Object.keys(erreurs).length) { %><div class="flash erreur" role="alert">Le formulaire contient des erreurs : vérifiez les champs signalés.</div><% } %>
+
+  <form method="post" action="<%= action %>" novalidate class="carte">
+    <input type="hidden" name="_csrf" value="<%= csrf %>">
+    <fieldset>
+      <legend>Identification du projet</legend>
+      <div class="champ <%= erreurs.titre ? 'erreur' : '' %>">
+        <label for="titre" class="obligatoire">Titre du projet</label>
+        <input id="titre" name="titre" type="text" maxlength="120" required value="<%= v.titre || '' %>">
+        <%- include('../partials/champ-erreur', { nom: 'titre' }) %>
+      </div>
+      <div class="grille g-2" style="gap:0 16px">
+        <div class="champ <%= erreurs.domaine ? 'erreur' : '' %>">
+          <label for="domaine" class="obligatoire">Domaine</label>
+          <select id="domaine" name="domaine" required>
+            <option value="">Choisir…</option>
+            <% ref.DOMAINES.forEach(function (d) { %><option <%= v.domaine === d ? 'selected' : '' %>><%= d %></option><% }) %>
+          </select>
+          <%- include('../partials/champ-erreur', { nom: 'domaine' }) %>
+        </div>
+        <div class="champ <%= erreurs.stade ? 'erreur' : '' %>">
+          <label for="stade">Stade d'avancement</label>
+          <select id="stade" name="stade">
+            <option value="">Choisir…</option>
+            <% Object.entries(ref.STADES).forEach(function (s) { %><option value="<%= s[0] %>" <%= v.stade === s[0] ? 'selected' : '' %>><%= s[1] %></option><% }) %>
+          </select>
+          <%- include('../partials/champ-erreur', { nom: 'stade' }) %>
+        </div>
+        <div class="champ <%= erreurs.taille_equipe ? 'erreur' : '' %>">
+          <label for="taille_equipe">Taille de l'équipe</label>
+          <input id="taille_equipe" name="taille_equipe" type="number" min="1" max="50" value="<%= v.taille_equipe ?? '' %>">
+          <%- include('../partials/champ-erreur', { nom: 'taille_equipe' }) %>
+        </div>
+        <div class="champ <%= erreurs.besoin_financement ? 'erreur' : '' %>">
+          <label for="besoin_financement">Besoin de financement (FCFA)</label>
+          <input id="besoin_financement" name="besoin_financement" type="number" min="0" step="1000" value="<%= v.besoin_financement ?? '' %>">
+          <%- include('../partials/champ-erreur', { nom: 'besoin_financement' }) %>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Présentation</legend>
+      <div class="champ <%= erreurs.resume ? 'erreur' : '' %>">
+        <label for="resume">Résumé du projet</label>
+        <textarea id="resume" name="resume" maxlength="1500" data-compteur="80"><%= v.resume || '' %></textarea>
+        <%- include('../partials/champ-erreur', { nom: 'resume' }) %>
+      </div>
+      <div class="champ <%= erreurs.probleme ? 'erreur' : '' %>">
+        <label for="probleme">Problème adressé</label>
+        <textarea id="probleme" name="probleme" maxlength="2000" placeholder="Quel besoin ou quel problème votre projet résout-il ? Pour qui ?"><%= v.probleme || '' %></textarea>
+        <%- include('../partials/champ-erreur', { nom: 'probleme' }) %>
+      </div>
+      <div class="champ <%= erreurs.solution ? 'erreur' : '' %>">
+        <label for="solution">Solution proposée</label>
+        <textarea id="solution" name="solution" maxlength="2000" placeholder="Décrivez votre produit ou service et ce qui le rend différent."><%= v.solution || '' %></textarea>
+        <%- include('../partials/champ-erreur', { nom: 'solution' }) %>
+      </div>
+      <div class="champ <%= erreurs.marche_cible ? 'erreur' : '' %>">
+        <label for="marche_cible">Marché cible</label>
+        <textarea id="marche_cible" name="marche_cible" maxlength="1500" placeholder="Qui sont vos clients ou usagers ? Combien sont-ils ?"><%= v.marche_cible || '' %></textarea>
+        <%- include('../partials/champ-erreur', { nom: 'marche_cible' }) %>
+      </div>
+      <div class="champ <%= erreurs.modele_economique ? 'erreur' : '' %>">
+        <label for="modele_economique">Modèle économique (facultatif)</label>
+        <textarea id="modele_economique" name="modele_economique" maxlength="1500" placeholder="Comment le projet générera-t-il des revenus ?"><%= v.modele_economique || '' %></textarea>
+        <%- include('../partials/champ-erreur', { nom: 'modele_economique' }) %>
+      </div>
+    </fieldset>
+
+    <div class="actions">
+      <button class="btn" type="submit">Enregistrer le brouillon</button>
+      <a class="btn secondaire" href="<%= v.id ? '/projets/' + v.id : '/tableau-de-bord' %>">Annuler</a>
+    </div>
+  </form>
+</div>
+<%- include('../partials/bas') %>

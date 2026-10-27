@@ -1,0 +1,73 @@
+<%- include('../partials/haut') %>
+<div class="conteneur">
+  <div class="fil"><a href="/tableau-de-bord">Comité</a> › <a href="/projets/<%= p.id %>?onglet=evaluation"><%= p.titre %></a> › Évaluation</div>
+  <div class="titre-page"><div><h1>Grille d'évaluation</h1><p class="sous-titre"><%= p.titre %> · <%= p.domaine %></p></div></div>
+  <%- include('../partials/flash') %>
+  <% if (Object.keys(erreurs).length) { %><div class="flash erreur" role="alert">Toutes les notes, la recommandation et un commentaire argumenté sont obligatoires.</div><% } %>
+
+  <div class="grille g-21">
+    <form method="post" action="/projets/<%= p.id %>/evaluation" class="carte" novalidate>
+      <input type="hidden" name="_csrf" value="<%= csrf %>">
+      <p class="petit muted">Notez chaque critère de 0 (insuffisant) à 5 (excellent). Le score sur 100 est calculé automatiquement selon la pondération.</p>
+      <% criteres.forEach(function (c) { %>
+        <div class="critere <%= erreurs['note_' + c.id] ? 'erreur' : '' %>">
+          <div class="ligne entre"><span class="etiquette" id="lbl-<%= c.id %>"><%= c.libelle %></span><span class="badge brun">Poids <%= c.poids %> %</span></div>
+          <p class="petit muted" style="margin:2px 0 8px"><%= c.description %></p>
+          <div class="notation" role="radiogroup" aria-labelledby="lbl-<%= c.id %>">
+            <% for (let n = 0; n <= 5; n++) { %>
+              <label><input type="radio" name="note_<%= c.id %>" value="<%= n %>" <%= notes[c.id] === n ? 'checked' : '' %> required><span><%= n %></span></label>
+            <% } %>
+          </div>
+          <%- include('../partials/champ-erreur', { nom: 'note_' + c.id }) %>
+        </div>
+      <% }) %>
+
+      <div class="champ <%= erreurs.recommandation ? 'erreur' : '' %>" style="margin-top:16px">
+        <span class="etiquette obligatoire">Recommandation</span>
+        <div class="ligne">
+          <% Object.entries(ref.RECOMMANDATIONS).forEach(function (r) { %>
+            <label class="case"><input type="radio" name="recommandation" value="<%= r[0] %>" <%= existante && existante.recommandation === r[0] ? 'checked' : '' %>> <%= r[1] %></label>
+          <% }) %>
+        </div>
+        <%- include('../partials/champ-erreur', { nom: 'recommandation' }) %>
+      </div>
+      <div class="champ <%= erreurs.commentaire ? 'erreur' : '' %>">
+        <label for="commentaire" class="obligatoire">Commentaire argumenté</label>
+        <textarea id="commentaire" name="commentaire" maxlength="3000" data-compteur="30" placeholder="Justifiez vos notes : points forts, faiblesses, conditions éventuelles."><%= existante ? existante.commentaire : '' %></textarea>
+        <%- include('../partials/champ-erreur', { nom: 'commentaire' }) %>
+      </div>
+      <div class="actions">
+        <button class="btn" type="submit"><%= existante && existante.id ? 'Mettre à jour mon évaluation' : 'Enregistrer mon évaluation' %></button>
+        <a class="btn secondaire" href="/projets/<%= p.id %>">Annuler</a>
+      </div>
+    </form>
+
+    <aside class="pile">
+      <div class="carte">
+        <h3>Rappel du dossier</h3>
+        <dl class="dl petit">
+          <dt>Stade</dt><dd><%= ref.STADES[p.stade] || '—' %></dd>
+          <dt>Équipe</dt><dd><%= p.taille_equipe || '—' %></dd>
+          <dt>Besoin</dt><dd><%= formatMontant(p.besoin_financement) %></dd>
+        </dl>
+        <h4 style="margin-top:14px">Résumé</h4>
+        <p class="petit"><%= p.resume %></p>
+        <a class="petit" href="/projets/<%= p.id %>?onglet=dossier" target="_blank" rel="noopener">Voir le dossier complet</a>
+      </div>
+      <div class="carte">
+        <h3>Pièces</h3>
+        <ul class="liste petit">
+          <% documents.forEach(function (d) { %><li><a href="/documents/<%= d.id %>"><%= ref.TYPES_DOCUMENT[d.type_doc] %></a><div class="muted"><%= d.nom_original %></div></li><% }) %>
+        </ul>
+      </div>
+      <% if (p.analyse_ia) { %>
+        <div class="carte" style="border-top:4px solid #5B3A8E">
+          <div class="carte-titre"><h3>Pré-analyse IA</h3><span class="badge ia">IA</span></div>
+          <div class="petit"><%- markdownVersHtml(p.analyse_ia) %></div>
+          <p class="petit muted mb-0">Aide à la lecture : votre évaluation reste personnelle et indépendante.</p>
+        </div>
+      <% } %>
+    </aside>
+  </div>
+</div>
+<%- include('../partials/bas') %>

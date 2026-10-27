@@ -1,0 +1,66 @@
+<%- include('../partials/haut') %>
+<div class="conteneur">
+  <div class="titre-page">
+    <div><h1><%= titre %></h1><p class="sous-titre"><%= projets.length %> projet(s)<%= projets.length === 500 ? ' (500 premiers résultats)' : '' %></p></div>
+    <% if (user.role === 'porteur') { %><a class="btn" href="/projets/nouveau">+ Nouveau dossier</a><% } %>
+    <% if (user.role === 'coordonnateur') { %><a class="btn secondaire" href="/coordination/export.xlsx">Exporter en Excel</a><% } %>
+  </div>
+  <%- include('../partials/flash') %>
+
+  <% if (user.role !== 'porteur') { %>
+  <form class="carte filtres" method="get" action="/projets" style="margin-bottom:18px" role="search">
+    <div class="champ" style="flex:2 1 240px">
+      <label for="q">Recherche</label>
+      <input id="q" name="q" type="search" placeholder="Titre, résumé ou nom du porteur" value="<%= f.q %>">
+    </div>
+    <div class="champ">
+      <label for="statut">Statut</label>
+      <select id="statut" name="statut">
+        <option value="">Tous</option>
+        <% Object.keys(ref.STATUTS).forEach(function (s) { %><option value="<%= s %>" <%= f.statut === s ? 'selected' : '' %>><%= ref.STATUTS[s].libelle %></option><% }) %>
+      </select>
+    </div>
+    <div class="champ">
+      <label for="domaine">Domaine</label>
+      <select id="domaine" name="domaine">
+        <option value="">Tous</option>
+        <% ref.DOMAINES.forEach(function (d) { %><option <%= f.domaine === d ? 'selected' : '' %>><%= d %></option><% }) %>
+      </select>
+    </div>
+    <div class="champ">
+      <label for="cohorte">Cohorte</label>
+      <select id="cohorte" name="cohorte">
+        <option value="">Toutes</option>
+        <% cohortes.forEach(function (c) { %><option value="<%= c.id %>" <%= f.cohorte === String(c.id) ? 'selected' : '' %>><%= c.nom %></option><% }) %>
+      </select>
+    </div>
+    <div class="ligne"><button class="btn" type="submit">Filtrer</button><a class="btn secondaire" href="/projets">Effacer</a></div>
+  </form>
+  <% } %>
+
+  <% if (!projets.length) { %>
+    <div class="carte vide"><p class="mb-0">Aucun projet ne correspond à ces critères.</p></div>
+  <% } else { %>
+  <div class="tableau-wrap">
+    <table class="responsive">
+      <thead>
+        <tr><th>Projet</th><% if (user.role !== 'porteur') { %><th>Porteur</th><% } %><th>Domaine</th><th>Statut</th><th>Cohorte</th><% if (['coordonnateur', 'evaluateur'].includes(user.role)) { %><th class="num">Score</th><% } %><th>Mis à jour</th></tr>
+      </thead>
+      <tbody>
+        <% projets.forEach(function (p) { %>
+          <tr>
+            <td data-label="Projet"><a href="/projets/<%= p.id %>"><strong><%= p.titre %></strong></a></td>
+            <% if (user.role !== 'porteur') { %><td data-label="Porteur"><%= p.porteur_nom %></td><% } %>
+            <td data-label="Domaine" class="petit"><%= p.domaine %></td>
+            <td data-label="Statut"><%- include('../partials/statut', { statut: p.statut }) %></td>
+            <td data-label="Cohorte"><%= p.cohorte_nom || '—' %></td>
+            <% if (['coordonnateur', 'evaluateur'].includes(user.role)) { %><td data-label="Score" class="num"><%= p.score_moyen !== null ? p.score_moyen : '—' %></td><% } %>
+            <td data-label="Mis à jour" class="petit"><%= formatDate(p.modifie_le) %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+  <% } %>
+</div>
+<%- include('../partials/bas') %>

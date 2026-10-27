@@ -1,0 +1,58 @@
+<%- include('../partials/haut') %>
+<div class="conteneur">
+  <div class="titre-page"><div><h1>Mon profil</h1><p class="sous-titre"><%= ref.ROLES[user.role] %> · <%= v.email || user.email %></p></div></div>
+  <%- include('../partials/flash') %>
+  <div class="grille g-21">
+    <div class="carte">
+      <h2>Informations personnelles</h2>
+      <form method="post" action="/profil" novalidate>
+        <input type="hidden" name="_csrf" value="<%= csrf %>">
+        <div class="grille g-2" style="gap:0 16px">
+          <div class="champ <%= erreurs.prenom ? 'erreur' : '' %>">
+            <label for="prenom" class="obligatoire">Prénom</label>
+            <input id="prenom" name="prenom" type="text" maxlength="60" value="<%= v.prenom || '' %>">
+            <%- include('../partials/champ-erreur', { nom: 'prenom' }) %>
+          </div>
+          <div class="champ <%= erreurs.nom ? 'erreur' : '' %>">
+            <label for="nom" class="obligatoire">Nom</label>
+            <input id="nom" name="nom" type="text" maxlength="60" value="<%= v.nom || '' %>">
+            <%- include('../partials/champ-erreur', { nom: 'nom' }) %>
+          </div>
+          <div class="champ <%= erreurs.telephone ? 'erreur' : '' %>">
+            <label for="telephone">Téléphone</label>
+            <input id="telephone" name="telephone" type="tel" maxlength="20" value="<%= v.telephone || '' %>">
+            <%- include('../partials/champ-erreur', { nom: 'telephone' }) %>
+          </div>
+          <div class="champ">
+            <label for="genre">Genre</label>
+            <select id="genre" name="genre">
+              <option value="">Non renseigné</option>
+              <option value="F" <%= v.genre === 'F' ? 'selected' : '' %>>Femme</option>
+              <option value="M" <%= v.genre === 'M' ? 'selected' : '' %>>Homme</option>
+            </select>
+          </div>
+          <div class="champ">
+            <label for="structure">Établissement ou structure</label>
+            <input id="structure" name="structure" type="text" maxlength="120" value="<%= v.structure || '' %>">
+          </div>
+          <div class="champ">
+            <label for="expertise">Domaine d'expertise</label>
+            <input id="expertise" name="expertise" type="text" maxlength="200" value="<%= v.expertise || '' %>">
+          </div>
+        </div>
+        <button class="btn" type="submit">Enregistrer</button>
+      </form>
+    </div>
+    <div class="carte">
+      <h2>Mot de passe</h2>
+      <form method="post" action="/profil/mot-de-passe" novalidate>
+        <input type="hidden" name="_csrf" value="<%= csrf %>">
+        <div class="champ"><label for="actuel">Mot de passe actuel</label><input id="actuel" name="actuel" type="password" autocomplete="current-password"></div>
+        <div class="champ"><label for="nouveau">Nouveau mot de passe</label><input id="nouveau" name="nouveau" type="password" autocomplete="new-password"><div class="aide">8 caractères minimum, avec lettres et chiffres.</div></div>
+        <div class="champ"><label for="confirmation">Confirmation</label><input id="confirmation" name="confirmation" type="password" autocomplete="new-password"></div>
+        <button class="btn secondaire" type="submit">Changer le mot de passe</button>
+      </form>
+    </div>
+  </div>
+</div>
+<%- include('../partials/bas') %>

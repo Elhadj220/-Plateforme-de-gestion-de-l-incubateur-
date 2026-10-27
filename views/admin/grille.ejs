@@ -1,0 +1,26 @@
+<%- include('../partials/haut') %>
+<div class="conteneur">
+  <div class="titre-page"><div><h1>Administration</h1><p class="sous-titre">Grille d'évaluation du comité de sélection.</p></div></div>
+  <%- include('_menu') %>
+  <%- include('../partials/flash') %>
+  <form method="post" action="/admin/grille" class="carte">
+    <input type="hidden" name="_csrf" value="<%= csrf %>">
+    <p class="muted">Chaque critère est noté de 0 à 5. Score = Σ (note / 5 × poids), sur 100. La somme des poids doit être égale à 100.</p>
+    <div class="tableau-wrap">
+      <table>
+        <thead><tr><th>Critère</th><th>Description</th><th class="num">Poids (%)</th></tr></thead>
+        <tbody>
+          <% criteres.forEach(function (c) { %>
+            <tr>
+              <td><strong><%= c.libelle %></strong></td>
+              <td class="petit"><%= c.description %></td>
+              <td class="num"><label for="p<%= c.id %>" class="sr-only">Poids de <%= c.libelle %></label><input id="p<%= c.id %>" name="poids_<%= c.id %>" type="number" min="1" max="100" value="<%= c.poids %>" style="width:90px;text-align:right"></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+    <div class="actions"><button class="btn" type="submit">Enregistrer la pondération</button></div>
+  </form>
+</div>
+<%- include('../partials/bas') %>

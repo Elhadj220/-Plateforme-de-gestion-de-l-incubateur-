@@ -1,0 +1,43 @@
+<%- include('partials/haut') %>
+<div class="conteneur">
+  <div class="titre-page">
+    <div><h1>Alertes de retard</h1><p class="sous-titre">Jalons dont l'échéance est dépassée ou proche (projets en incubation).</p></div>
+  </div>
+
+  <div class="carte" style="margin-bottom:18px">
+    <div class="carte-titre"><h2>Jalons en retard</h2><span class="badge rouge"><%= retards.length %></span></div>
+    <% if (!retards.length) { %><p class="muted mb-0">Aucun jalon en retard. </p><% } else { %>
+    <div class="tableau-wrap">
+      <table class="responsive">
+        <thead><tr><th>Projet</th><th>Jalon</th><th>Échéance</th><th class="num">Retard</th><th>Statut</th></tr></thead>
+        <tbody>
+          <% retards.forEach(function (j) { %>
+            <tr class="retard">
+              <td data-label="Projet"><a href="/projets/<%= j.projet_id %>?onglet=suivi#jalon-<%= j.id %>"><%= j.projet_titre %></a></td>
+              <td data-label="Jalon"><%= j.titre %></td>
+              <td data-label="Échéance"><%= formatDate(j.date_echeance) %></td>
+              <td data-label="Retard" class="num"><strong><%= j.jours_retard %> jour(s)</strong></td>
+              <td data-label="Statut"><span class="badge <%= ref.STATUTS_JALON[j.statut].classe %>"><%= ref.STATUTS_JALON[j.statut].libelle %></span></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+    <% } %>
+  </div>
+
+  <div class="carte">
+    <div class="carte-titre"><h2>Échéances dans les 7 prochains jours</h2><span class="badge orange"><%= bientot.length %></span></div>
+    <% if (!bientot.length) { %><p class="muted mb-0">Aucune échéance proche.</p><% } else { %>
+    <ul class="liste">
+      <% bientot.forEach(function (j) { %>
+        <li class="ligne entre">
+          <div><a href="/projets/<%= j.projet_id %>?onglet=suivi#jalon-<%= j.id %>"><strong><%= j.titre %></strong></a><div class="petit muted"><%= j.projet_titre %></div></div>
+          <span class="badge orange"><%= formatDate(j.date_echeance) %></span>
+        </li>
+      <% }) %>
+    </ul>
+    <% } %>
+  </div>
+</div>
+<%- include('partials/bas') %>

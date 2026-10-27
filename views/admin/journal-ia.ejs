@@ -1,0 +1,29 @@
+<%- include('../partials/haut') %>
+<div class="conteneur">
+  <div class="titre-page"><div><h1>Administration</h1><p class="sous-titre">Traçabilité des appels à l'IA générative.</p></div></div>
+  <%- include('_menu') %>
+  <div class="grille g-3" style="margin-bottom:18px">
+    <div class="kpi"><div class="valeur"><%= stats.total || 0 %></div><div class="libelle">Appels enregistrés</div></div>
+    <div class="kpi ok"><div class="valeur"><%= stats.succes || 0 %></div><div class="libelle">Réponses de Gemini</div><div class="detail"><%= (stats.total || 0) - (stats.succes || 0) %> repli(s) sur le modèle de secours</div></div>
+    <div class="kpi"><div class="valeur"><%= stats.duree ? (stats.duree / 1000).toFixed(1) + ' s' : '—' %></div><div class="libelle">Temps de réponse moyen</div></div>
+  </div>
+  <div class="encart petit" style="margin-bottom:16px">Configuration : <strong><%= iaActive ? 'clé Gemini configurée' : 'aucune clé GEMINI_API_KEY — modèle de secours utilisé' %></strong>. Les prompts ne contiennent ni nom, ni e-mail, ni téléphone.</div>
+  <% if (!appels.length) { %><div class="carte vide"><p class="mb-0">Aucun appel à l'IA pour le moment.</p></div><% } %>
+  <% appels.forEach(function (a) { %>
+    <details class="carte" style="margin-bottom:10px">
+      <summary class="ligne entre" style="cursor:pointer">
+        <span><strong><%= { analyse_dossier: 'Pré-analyse de dossier', compte_rendu: 'Compte rendu', suggestion_jalons: 'Suggestion de jalons' }[a.fonction] || a.fonction %></strong> · <%= a.projet_titre || '—' %></span>
+        <span class="ligne petit">
+          <span class="badge <%= a.succes ? 'vert' : 'orange' %>"><%= a.succes ? a.modele : 'secours' %></span>
+          <span class="muted"><%= formatDateHeure(a.cree_le) %> · <%= a.utilisateur || '—' %> · <%= a.duree_ms %> ms</span>
+        </span>
+      </summary>
+      <% if (a.erreur) { %><p class="petit" style="color:var(--rouge);margin-top:10px">Erreur : <%= a.erreur %></p><% } %>
+      <h4 style="margin-top:12px">Prompt envoyé</h4>
+      <pre class="petit" style="white-space:pre-wrap;background:var(--creme);padding:12px;border-radius:8px;max-height:300px;overflow:auto"><%= a.prompt %></pre>
+      <h4>Réponse</h4>
+      <pre class="petit" style="white-space:pre-wrap;background:#F7F2FD;padding:12px;border-radius:8px;max-height:300px;overflow:auto"><%= a.reponse %></pre>
+    </details>
+  <% }) %>
+</div>
+<%- include('../partials/bas') %>

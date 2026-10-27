@@ -1,0 +1,511 @@
+<%- include('../partials/haut') %>
+<%
+  const estPorteur = user.role === 'porteur';
+  const estCoordo = user.role === 'coordonnateur';
+  const estEval = user.role === 'evaluateur';
+  const enSuivi = ['en_incubation', 'termine'].includes(p.statut);
+  const decide = ['retenu', 'ajourne', 'refuse', 'en_incubation', 'termine'].includes(p.statut);
+  const crVisibles = estPorteur ? comptesRendus.filter(function (c) { return c.statut === 'valide' && c.type_cr !== 'comite'; }) : comptesRendus;
+  const ongletDefaut = onglet || (enSuivi && !estEval ? 'suivi' : estEval ? 'evaluation' : 'dossier');
+%>
+<div class="conteneur">
+  <div class="titre-page">
+    <div>
+      <div class="fil"><a href="/projets"><%= estPorteur ? 'Mes projets' : 'Projets' %></a> › Fiche projet</div>
+      <h1><%= p.titre %></h1>
+      <p class="sous-titre"><%- include('../partials/statut', { statut: p.statut }) %> &nbsp;<%= p.domaine %><% if (p.cohorte_nom) { %> · <%= p.cohorte_nom %><% } %></p>
+    </div>
+    <div class="ligne">
+      <% if (estPorteur && modifiable) { %>
+        <a class="btn secondaire" href="/projets/<%= p.id %>/modifier">Modifier le dossier</a>
+      <% } %>
+      <% if (!estEval) { %><a class="btn secondaire" href="/projets/<%= p.id %>/fiche.pdf">Fiche PDF</a><% } %>
+      <% if (estEval && ['soumis', 'en_evaluation'].includes(p.statut)) { %>
+        <a class="btn" href="/projets/<%= p.id %>/evaluation"><%= monEvaluation ? 'Modifier mon évaluation' : 'Évaluer ce dossier' %></a>
+      <% } %>
+    </div>
+  </div>
+  <%- include('../partials/flash') %>
+
+  <% if (estPorteur && modifiable) { %>
+    <div class="carte accent" style="margin-bottom:20px">
+      <div class="carte-titre">
+        <h2>Contrôle de complétude</h2>
+        <strong><%= completude.pourcentage %> %</strong>
+      </div>
+      <div class="progression <%= completude.complet ? 'vert' : '' %>" style="margin-bottom:12px"><div style="width:<%= completude.pourcentage %>%"></div></div>
+      <% if (completude.complet) { %>
+        <p>Votre dossier est complet. Après soumission, il ne pourra plus être modifié pendant l'examen par le comité.</p>
+        <form method="post" action="/projets/<%= p.id %>/soumettre" data-confirmer="Confirmez-vous la soumission de votre dossier au comité de sélection ?">
+          <input type="hidden" name="_csrf" value="<%= csrf %>">
+          <button class="btn succes" type="submit">Soumettre mon dossier</button>
+        </form>
+      <% } else { %>
+        <ul class="check"><% completude.manquants.forEach(function (m) { %><li class="non"><%= m %></li><% }) %></ul>
+      <% } %>
+      <% if (p.statut === 'ajourne') { %><p class="petit muted" style="margin-top:10px">Votre dossier a été ajourné : tenez compte de la motivation du comité (onglet « Sélection »), puis soumettez-le à nouveau.</p><% } %>
+    </div>
+  <% } %>
+
+  <nav class="onglets" role="tablist" data-defaut="<%= ongletDefaut %>">
+    <a href="?onglet=dossier" data-onglet="dossier" role="tab">Dossier</a>
+    <a href="?onglet=documents" data-onglet="documents" role="tab">Pièces (<%= documents.length %>)</a>
+    <% if (!estPorteur || decide) { %><a href="?onglet=evaluation" data-onglet="evaluation" role="tab">Sélection</a><% } %>
+    <% if (!estEval && (enSuivi || (estCoordo && p.statut === 'retenu'))) { %><a href="?onglet=suivi" data-onglet="suivi" role="tab">Suivi d'incubation</a><% } %>
+    <% if (!estEval && (crVisibles.length || pilote)) { %><a href="?onglet=comptes-rendus" data-onglet="comptes-rendus" role="tab">Comptes rendus (<%= crVisibles.length %>)</a><% } %>
+  </nav>
+
+  <!-- ============ DOSSIER ============ -->
+  <section id="panneau-dossier" class="panneau" role="tabpanel">
+    <div class="grille g-21">
+      <div class="carte pile">
+        <% [['Résumé', p.resume], ['Problème adressé', p.probleme], ['Solution proposée', p.solution], ['Marché cible', p.marche_cible], ['Modèle économique', p.modele_economique]].forEach(function (b) { %>
+          <div><h3><%= b[0] %></h3><p class="texte-long mb-0 <%= b[1] ? '' : 'muted' %>"><%= b[1] || 'Non renseigné' %></p></div>
+        <% }) %>
+      </div>
+      <aside class="carte">
+        <h3>Informations</h3>
+        <dl class="dl">
+          <% if (!estEval) { %><dt>Porteur</dt><dd><%= p.porteur_nom %></dd><% } %>
+          <% if (estCoordo || user.role === 'mentor') { %>
+            <dt>Contact</dt><dd><a href="mailto:<%= p.porteur_email %>"><%= p.porteur_email %></a><% if (p.porteur_telephone) { %><br><%= p.porteur_telephone %><% } %></dd>
+          <% } %>
+          <dt>Stade</dt><dd><%= ref.STADES[p.stade] || '—' %></dd>
+          <dt>Équipe</dt><dd><%= p.taille_equipe ? p.taille_equipe + ' personne(s)' : '—' %></dd>
+          <dt>Besoin</dt><dd><%= formatMontant(p.besoin_financement) %></dd>
+          <% if (enSuivi) { %><dt>Obtenu</dt><dd><%= formatMontant(p.financement_obtenu) %></dd><% } %>
+          <dt>Créé le</dt><dd><%= formatDate(p.cree_le) %></dd>
+          <dt>Soumis le</dt><dd><%= formatDate(p.date_soumission) %></dd>
+          <% if (p.date_decision) { %><dt>Décision</dt><dd><%= formatDate(p.date_decision) %></dd><% } %>
+          <% if (p.mentor_nom) { %><dt>Mentor</dt><dd><%= p.mentor_nom %></dd><% } %>
+          <% if (p.date_debut_incubation) { %><dt>Incubation</dt><dd>depuis le <%= formatDate(p.date_debut_incubation) %></dd><% } %>
+          <% if (p.date_sortie) { %><dt>Sortie</dt><dd><%= formatDate(p.date_sortie) %></dd><% } %>
+        </dl>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ============ DOCUMENTS ============ -->
+  <section id="panneau-documents" class="panneau" role="tabpanel" hidden>
+    <div class="grille g-21" id="documents">
+      <div class="carte">
+        <h2>Pièces du dossier</h2>
+        <% if (!documents.length) { %><p class="muted">Aucune pièce déposée.</p><% } %>
+        <% documents.forEach(function (d) { %>
+          <div class="document-ligne">
+            <div>
+              <strong><%= ref.TYPES_DOCUMENT[d.type_doc] %></strong>
+              <% if (ref.DOCUMENTS_OBLIGATOIRES.includes(d.type_doc)) { %><span class="badge gris">obligatoire</span><% } %>
+              <div class="petit muted"><%= d.nom_original %> · <%= Math.max(1, Math.round(d.taille / 1024)) %> Ko · déposé le <%= formatDateHeure(d.depose_le) %></div>
+            </div>
+            <div class="ligne">
+              <a class="btn petit secondaire" href="/documents/<%= d.id %>">Télécharger</a>
+              <% if ((estPorteur && modifiable) || estCoordo) { %>
+                <form method="post" action="/documents/<%= d.id %>/supprimer" class="en-ligne" data-confirmer="Supprimer ce document ?">
+                  <input type="hidden" name="_csrf" value="<%= csrf %>">
+                  <button class="btn petit danger" type="submit">Supprimer</button>
+                </form>
+              <% } %>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+      <% if ((estPorteur && (modifiable || p.statut === 'en_incubation')) || estCoordo) { %>
+        <aside class="carte">
+          <h3>Ajouter une pièce</h3>
+          <form method="post" action="/projets/<%= p.id %>/documents" enctype="multipart/form-data">
+            <input type="hidden" name="_csrf" value="<%= csrf %>">
+            <div class="champ">
+              <label for="type_doc" class="obligatoire">Type de document</label>
+              <select id="type_doc" name="type_doc" required>
+                <% Object.entries(ref.TYPES_DOCUMENT).forEach(function (t) { %><option value="<%= t[0] %>"><%= t[1] %><%= ref.DOCUMENTS_OBLIGATOIRES.includes(t[0]) ? ' (obligatoire)' : '' %></option><% }) %>
+              </select>
+            </div>
+            <div class="champ">
+              <label for="fichier" class="obligatoire">Fichier</label>
+              <input id="fichier" name="fichier" type="file" required accept=".pdf,.png,.jpg,.jpeg,.docx,.xlsx,.pptx" data-taille-max="5">
+              <div class="aide">PDF, Word, Excel, PowerPoint, JPG ou PNG — 5 Mo maximum.</div>
+            </div>
+            <button class="btn" type="submit">Déposer</button>
+          </form>
+        </aside>
+      <% } %>
+    </div>
+  </section>
+
+  <!-- ============ SÉLECTION ============ -->
+  <% if (!estPorteur || decide) { %>
+  <section id="panneau-evaluation" class="panneau" role="tabpanel" hidden>
+    <div class="grille g-21">
+      <div class="pile">
+        <% if (decision) { %>
+          <div class="carte accent">
+            <div class="carte-titre"><h2>Décision du comité</h2><span class="badge <%= decision.decision === 'retenu' ? 'vert' : decision.decision === 'ajourne' ? 'orange' : 'rouge' %>"><%= ref.DECISIONS[decision.decision] %></span></div>
+            <p class="texte-long"><%= decision.motivation %></p>
+            <p class="petit muted mb-0">Décision du <%= formatDate(decision.decide_le) %><% if (!estPorteur) { %> · <%= decision.nb_evaluations %> évaluation(s), score moyen <%= decision.score_moyen ?? '—' %>/100 · enregistrée par <%= decision.decideur %><% } %></p>
+          </div>
+        <% } %>
+
+        <% if (voitEvaluations && synthese.evaluations.length) { %>
+          <div class="carte">
+            <div class="carte-titre"><h2>Évaluations du comité</h2><span class="badge brun">Moyenne : <%= synthese.moyenne %> / 100</span></div>
+            <div class="ligne petit" style="margin-bottom:12px">
+              <span class="badge vert"><%= synthese.recommandations.favorable %> favorable(s)</span>
+              <span class="badge orange"><%= synthese.recommandations.reserve %> réservé(s)</span>
+              <span class="badge rouge"><%= synthese.recommandations.defavorable %> défavorable(s)</span>
+            </div>
+            <div class="tableau-wrap" style="margin-bottom:14px">
+              <table>
+                <thead><tr><th>Critère</th><th class="num">Poids</th><th class="num">Note moyenne /5</th></tr></thead>
+                <tbody><% synthese.parCritere.forEach(function (c) { %><tr><td><%= c.libelle %></td><td class="num"><%= c.poids %> %</td><td class="num"><%= c.moyenne %></td></tr><% }) %></tbody>
+              </table>
+            </div>
+            <ul class="liste">
+              <% synthese.evaluations.forEach(function (e) { %>
+                <li>
+                  <div class="ligne entre"><strong><%= e.evaluateur_nom %></strong><span class="ligne"><span class="badge <%= e.recommandation === 'favorable' ? 'vert' : e.recommandation === 'reserve' ? 'orange' : 'rouge' %>"><%= ref.RECOMMANDATIONS[e.recommandation] %></span><span class="badge brun"><%= e.score %>/100</span></span></div>
+                  <p class="petit mb-0" style="margin-top:4px"><%= e.commentaire %></p>
+                </li>
+              <% }) %>
+            </ul>
+          </div>
+        <% } else if (estEval && !monEvaluation && ['soumis', 'en_evaluation'].includes(p.statut)) { %>
+          <div class="carte"><p class="mb-0">Les évaluations des autres membres du comité seront visibles après l'enregistrement de la vôtre, afin de garantir l'indépendance des avis.</p></div>
+        <% } else if (!estPorteur && !synthese.evaluations.length) { %>
+          <div class="carte"><p class="muted mb-0">Aucune évaluation pour le moment.</p></div>
+        <% } %>
+
+        <% if (estCoordo && ['soumis', 'en_evaluation'].includes(p.statut)) { %>
+          <div class="carte">
+            <h2>Enregistrer la décision du comité</h2>
+            <% if (!synthese.evaluations.length) { %><div class="encart alerte petit" style="margin-bottom:12px">Au moins une évaluation est nécessaire avant de décider.</div><% } %>
+            <form method="post" action="/projets/<%= p.id %>/decision" data-confirmer="Confirmez-vous cette décision ? Elle sera visible par le porteur.">
+              <input type="hidden" name="_csrf" value="<%= csrf %>">
+              <div class="grille g-2" style="gap:0 16px">
+                <div class="champ">
+                  <label for="decision" class="obligatoire">Décision</label>
+                  <select id="decision" name="decision" required>
+                    <option value="">Choisir…</option>
+                    <% Object.entries(ref.DECISIONS).forEach(function (d) { %><option value="<%= d[0] %>"><%= d[1] %></option><% }) %>
+                  </select>
+                </div>
+                <div class="champ">
+                  <label for="cohorte_id">Cohorte (si retenu)</label>
+                  <select id="cohorte_id" name="cohorte_id">
+                    <option value="">—</option>
+                    <% cohortes.forEach(function (c) { %><option value="<%= c.id %>"><%= c.nom %></option><% }) %>
+                  </select>
+                </div>
+              </div>
+              <div class="champ">
+                <label for="motivation" class="obligatoire">Motivation de la décision</label>
+                <textarea id="motivation" name="motivation" required minlength="30" maxlength="3000" data-compteur="30" placeholder="Expliquez les raisons de la décision, les points forts et les points à améliorer. Ce texte sera communiqué au porteur."></textarea>
+              </div>
+              <button class="btn" type="submit">Enregistrer la décision</button>
+            </form>
+          </div>
+        <% } %>
+
+        <% if (estCoordo && ['retenu', 'en_incubation'].includes(p.statut)) { %>
+          <div class="carte" id="mentor">
+            <h2><%= p.mentor_nom ? 'Changer de mentor' : 'Affecter un mentor' %></h2>
+            <p class="petit muted">L'affectation démarre l'incubation. La charge actuelle de chaque mentor est indiquée.</p>
+            <form method="post" action="/projets/<%= p.id %>/mentor" class="ligne">
+              <input type="hidden" name="_csrf" value="<%= csrf %>">
+              <label for="mentor_id" class="sr-only">Mentor</label>
+              <select id="mentor_id" name="mentor_id" required style="flex:1 1 260px">
+                <% mentors.forEach(function (m) { %><option value="<%= m.id %>" <%= p.mentor_id === m.id ? 'selected' : '' %>><%= m.nom %> — <%= m.expertise || 'expertise non renseignée' %> (<%= m.charge %> projet(s))</option><% }) %>
+              </select>
+              <button class="btn" type="submit">Affecter</button>
+            </form>
+          </div>
+        <% } %>
+      </div>
+
+      <% if (estCoordo || estEval) { %>
+        <aside class="pile">
+          <div class="carte" style="border-top:4px solid #5B3A8E">
+            <div class="carte-titre"><h3>Pré-analyse par l'IA</h3><span class="badge ia">IA générative</span></div>
+            <% if (p.analyse_ia) { %>
+              <div class="petit"><%- markdownVersHtml(p.analyse_ia) %></div>
+              <p class="petit muted">Générée le <%= formatDateHeure(p.analyse_ia_le) %>.</p>
+            <% } else { %>
+              <p class="petit muted">Obtenez une synthèse du dossier, ses points forts, ses points de vigilance et des questions à poser au porteur.</p>
+            <% } %>
+            <div class="encart ia petit" style="margin-bottom:12px">Aide à la lecture uniquement : l'IA ne note pas et ne décide pas. Vérifiez chaque affirmation dans le dossier.</div>
+            <% if (['soumis', 'en_evaluation'].includes(p.statut) || estCoordo) { %>
+            <form method="post" action="/projets/<%= p.id %>/analyse-ia">
+              <input type="hidden" name="_csrf" value="<%= csrf %>">
+              <button class="btn ia bloc" type="submit" data-chargement="Analyse en cours…"><%= p.analyse_ia ? 'Régénérer la pré-analyse' : 'Générer la pré-analyse' %></button>
+            </form>
+            <% } %>
+          </div>
+        </aside>
+      <% } %>
+    </div>
+  </section>
+  <% } %>
+
+  <!-- ============ SUIVI ============ -->
+  <% if (!estEval && (enSuivi || (estCoordo && p.statut === 'retenu'))) { %>
+  <section id="panneau-suivi" class="panneau" role="tabpanel" hidden>
+    <% if (p.statut === 'retenu') { %>
+      <div class="carte vide"><p class="mb-0">Le suivi démarrera après l'affectation d'un mentor (onglet « Sélection »).</p></div>
+    <% } else { %>
+    <div class="grille g-4" style="margin-bottom:18px">
+      <div class="kpi"><div class="valeur"><%= avancement.pourcentage %> %</div><div class="libelle">Jalons validés</div><div class="detail"><%= avancement.valides %> sur <%= avancement.total %></div></div>
+      <% const nbRetard = jalons.filter(function (j) { return j.en_retard; }).length; %>
+      <div class="kpi <%= nbRetard ? 'alerte' : 'ok' %>"><div class="valeur"><%= nbRetard %></div><div class="libelle">Jalons en retard</div></div>
+      <div class="kpi"><div class="valeur"><%= objectifs.filter(function (o) { return o.atteint; }).length %> / <%= objectifs.length %></div><div class="libelle">Objectifs atteints</div></div>
+      <div class="kpi"><div class="valeur" style="font-size:1.25rem"><%= formatMontant(p.financement_obtenu) %></div><div class="libelle">Financement obtenu</div></div>
+    </div>
+
+    <div class="grille g-21">
+      <div class="pile">
+        <!-- Jalons -->
+        <div class="carte" id="jalons">
+          <div class="carte-titre">
+            <h2>Calendrier des jalons</h2>
+            <% if (pilote && p.statut === 'en_incubation') { %>
+              <form method="post" action="/projets/<%= p.id %>/jalons/suggestion-ia" class="en-ligne">
+                <input type="hidden" name="_csrf" value="<%= csrf %>">
+                <button class="btn ia petit" type="submit" data-chargement="Génération en cours…">Proposer des jalons avec l'IA</button>
+              </form>
+            <% } %>
+          </div>
+          <% if (!jalons.length) { %><p class="muted">Aucun jalon défini pour le moment.</p><% } %>
+          <% jalons.forEach(function (j) { const pr = preuves.filter(function (x) { return x.jalon_id === j.id; }); %>
+            <div class="jalon <%= j.en_retard ? 'en-retard' : j.statut === 'valide' ? 'valide' : '' %>" id="jalon-<%= j.id %>">
+              <div class="ligne entre">
+                <strong><%= j.titre %></strong>
+                <span class="ligne">
+                  <% if (j.en_retard) { %><span class="badge rouge">En retard</span><% } %>
+                  <span class="badge <%= ref.STATUTS_JALON[j.statut].classe %>"><%= ref.STATUTS_JALON[j.statut].libelle %></span>
+                </span>
+              </div>
+              <div class="petit muted">Échéance : <%= formatDate(j.date_echeance) %><% if (j.date_realisation) { %> · validé le <%= formatDate(j.date_realisation) %><% } %></div>
+              <% if (j.description) { %><p class="petit" style="margin:6px 0 0"><%= j.description %></p><% } %>
+              <% if (pr.length) { %>
+                <div class="petit" style="margin-top:8px"><strong>Preuves :</strong>
+                  <% pr.forEach(function (x, i) { %><a href="/preuves/<%= x.id %>"><%= x.nom_original %></a><%= x.commentaire ? ' (' + x.commentaire + ')' : '' %><%= i < pr.length - 1 ? ', ' : '' %><% }) %>
+                </div>
+              <% } %>
+
+              <% if (p.statut === 'en_incubation') { %>
+                <div class="ligne" style="margin-top:10px">
+                  <% if (estPorteur && j.statut === 'a_faire') { %>
+                    <form method="post" action="/jalons/<%= j.id %>/statut" class="en-ligne"><input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="action" value="demarrer"><button class="btn petit secondaire" type="submit">Démarrer</button></form>
+                  <% } %>
+                  <% if (estPorteur && ['a_faire', 'en_cours', 'a_reprendre'].includes(j.statut)) { %>
+                    <form method="post" action="/jalons/<%= j.id %>/statut" class="en-ligne"><input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="action" value="soumettre"><button class="btn petit" type="submit" <%- pr.length ? '' : 'disabled title="Déposez d’abord une preuve"' %>>Soumettre au mentor</button></form>
+                  <% } %>
+                  <% if (pilote && j.statut === 'soumis') { %>
+                    <form method="post" action="/jalons/<%= j.id %>/statut" class="en-ligne"><input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="action" value="valider"><button class="btn petit succes" type="submit">Valider</button></form>
+                  <% } %>
+                </div>
+                <% if (estPorteur && j.statut !== 'valide' && j.statut !== 'soumis') { %>
+                  <details><summary>Déposer une preuve de réalisation</summary>
+                    <form method="post" action="/jalons/<%= j.id %>/preuves" enctype="multipart/form-data" style="margin-top:10px">
+                      <input type="hidden" name="_csrf" value="<%= csrf %>">
+                      <div class="champ"><label for="f-<%= j.id %>">Fichier</label><input id="f-<%= j.id %>" name="fichier" type="file" required accept=".pdf,.png,.jpg,.jpeg,.docx,.xlsx,.pptx" data-taille-max="5"></div>
+                      <div class="champ"><label for="c-<%= j.id %>">Commentaire (facultatif)</label><input id="c-<%= j.id %>" name="commentaire" type="text" maxlength="500"></div>
+                      <button class="btn petit" type="submit">Déposer</button>
+                    </form>
+                  </details>
+                <% } %>
+                <% if (pilote && j.statut === 'soumis') { %>
+                  <details><summary>Demander une reprise</summary>
+                    <form method="post" action="/jalons/<%= j.id %>/statut" style="margin-top:10px">
+                      <input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="action" value="reprendre">
+                      <div class="champ"><label for="m-<%= j.id %>">Ce qui doit être repris</label><textarea id="m-<%= j.id %>" name="motif" required minlength="10" maxlength="1000" style="min-height:70px"></textarea></div>
+                      <button class="btn petit secondaire" type="submit">Renvoyer au porteur</button>
+                    </form>
+                  </details>
+                <% } %>
+                <% if (pilote && j.statut !== 'valide') { %>
+                  <details><summary>Modifier ou supprimer le jalon</summary>
+                    <form method="post" action="/jalons/<%= j.id %>/modifier" style="margin-top:10px">
+                      <input type="hidden" name="_csrf" value="<%= csrf %>">
+                      <div class="grille g-2" style="gap:0 12px">
+                        <div class="champ"><label for="t-<%= j.id %>">Titre</label><input id="t-<%= j.id %>" name="titre" type="text" maxlength="120" value="<%= j.titre %>" required></div>
+                        <div class="champ"><label for="d-<%= j.id %>">Échéance</label><input id="d-<%= j.id %>" name="date_echeance" type="date" value="<%= j.date_echeance %>" required></div>
+                      </div>
+                      <div class="champ"><label for="ds-<%= j.id %>">Description / preuve attendue</label><input id="ds-<%= j.id %>" name="description" type="text" maxlength="500" value="<%= j.description || '' %>"></div>
+                      <button class="btn petit" type="submit">Enregistrer</button>
+                    </form>
+                    <form method="post" action="/jalons/<%= j.id %>/supprimer" data-confirmer="Supprimer ce jalon et ses preuves ?" style="margin-top:8px">
+                      <input type="hidden" name="_csrf" value="<%= csrf %>"><button class="btn petit danger" type="submit">Supprimer le jalon</button>
+                    </form>
+                  </details>
+                <% } %>
+              <% } %>
+            </div>
+          <% }) %>
+
+          <% if (pilote && p.statut === 'en_incubation') { %>
+            <details style="margin-top:14px"><summary><strong>+ Ajouter un jalon</strong></summary>
+              <form method="post" action="/projets/<%= p.id %>/jalons" style="margin-top:10px">
+                <input type="hidden" name="_csrf" value="<%= csrf %>">
+                <div class="grille g-2" style="gap:0 12px">
+                  <div class="champ"><label for="nj-titre" class="obligatoire">Titre</label><input id="nj-titre" name="titre" type="text" maxlength="120" required></div>
+                  <div class="champ"><label for="nj-date" class="obligatoire">Échéance</label><input id="nj-date" name="date_echeance" type="date" required></div>
+                </div>
+                <div class="champ"><label for="nj-desc">Description / preuve attendue</label><input id="nj-desc" name="description" type="text" maxlength="500"></div>
+                <button class="btn" type="submit">Ajouter</button>
+              </form>
+            </details>
+          <% } %>
+        </div>
+
+        <!-- Commentaires -->
+        <div class="carte" id="commentaires">
+          <h2>Échanges</h2>
+          <% if (p.statut === 'en_incubation' || p.statut === 'termine') { %>
+            <form method="post" action="/projets/<%= p.id %>/commentaires" style="margin-bottom:12px">
+              <input type="hidden" name="_csrf" value="<%= csrf %>">
+              <div class="champ">
+                <label for="contenu">Nouveau message</label>
+                <textarea id="contenu" name="contenu" required maxlength="2000" style="min-height:80px"></textarea>
+              </div>
+              <div class="ligne">
+                <label for="jalon_id" class="sr-only">Jalon concerné</label>
+                <select id="jalon_id" name="jalon_id" style="flex:1 1 220px">
+                  <option value="">Message général</option>
+                  <% jalons.forEach(function (j) { %><option value="<%= j.id %>">Jalon : <%= j.titre %></option><% }) %>
+                </select>
+                <button class="btn" type="submit">Publier</button>
+              </div>
+            </form>
+          <% } %>
+          <% if (!commentaires.length) { %><p class="muted mb-0">Aucun échange pour le moment.</p><% } %>
+          <% commentaires.forEach(function (c) { %>
+            <div class="commentaire">
+              <div class="meta"><strong><%= c.auteur %></strong> (<%= ref.ROLES[c.auteur_role] %>) · <%= formatDateHeure(c.cree_le) %><% if (c.jalon_titre) { %> · <span class="badge gris"><%= c.jalon_titre %></span><% } %></div>
+              <div class="texte-long"><%= c.contenu %></div>
+            </div>
+          <% }) %>
+        </div>
+      </div>
+
+      <aside class="pile">
+        <!-- Objectifs -->
+        <div class="carte" id="objectifs">
+          <h3>Objectifs</h3>
+          <% if (!objectifs.length) { %><p class="muted petit">Aucun objectif défini.</p><% } %>
+          <ul class="liste">
+            <% objectifs.forEach(function (o) { %>
+              <li>
+                <div class="ligne entre"><strong class="petit"><%= o.libelle %></strong><span class="badge <%= o.atteint ? 'vert' : 'gris' %>"><%= o.atteint ? 'Atteint' : 'En cours' %></span></div>
+                <div class="petit muted"><%= o.indicateur || '' %><%= o.cible ? ' · cible : ' + o.cible : '' %></div>
+                <% if (pilote && p.statut === 'en_incubation') { %>
+                  <div class="ligne" style="margin-top:6px">
+                    <form method="post" action="/objectifs/<%= o.id %>/basculer" class="en-ligne"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="btn petit secondaire" type="submit"><%= o.atteint ? 'Marquer non atteint' : 'Marquer atteint' %></button></form>
+                    <form method="post" action="/objectifs/<%= o.id %>/supprimer" class="en-ligne" data-confirmer="Supprimer cet objectif ?"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="btn petit danger" type="submit">Supprimer</button></form>
+                  </div>
+                <% } %>
+              </li>
+            <% }) %>
+          </ul>
+          <% if (pilote && p.statut === 'en_incubation') { %>
+            <details><summary class="petit"><strong>+ Ajouter un objectif</strong></summary>
+              <form method="post" action="/projets/<%= p.id %>/objectifs" style="margin-top:10px">
+                <input type="hidden" name="_csrf" value="<%= csrf %>">
+                <div class="champ"><label for="o-lib" class="obligatoire">Objectif</label><input id="o-lib" name="libelle" type="text" maxlength="200" required></div>
+                <div class="champ"><label for="o-ind">Indicateur</label><input id="o-ind" name="indicateur" type="text" maxlength="200"></div>
+                <div class="champ"><label for="o-cib">Cible</label><input id="o-cib" name="cible" type="text" maxlength="100"></div>
+                <button class="btn petit" type="submit">Ajouter</button>
+              </form>
+            </details>
+          <% } %>
+        </div>
+
+        <% if (pilote) { %>
+          <div class="carte">
+            <h3>Financement obtenu</h3>
+            <form method="post" action="/projets/<%= p.id %>/financement" class="ligne">
+              <input type="hidden" name="_csrf" value="<%= csrf %>">
+              <label for="fin" class="sr-only">Montant en FCFA</label>
+              <input id="fin" name="financement_obtenu" type="number" min="0" step="1000" value="<%= p.financement_obtenu %>" style="flex:1 1 140px">
+              <button class="btn petit" type="submit">Mettre à jour</button>
+            </form>
+            <p class="petit muted mb-0" style="margin-top:6px">Montant cumulé en FCFA (subventions, prêts, prix, levées).</p>
+          </div>
+        <% } %>
+
+        <% if (estCoordo && p.statut === 'en_incubation') { %>
+          <div class="carte">
+            <h3>Sortie d'incubation</h3>
+            <p class="petit muted">Clôture l'incubation et planifie automatiquement les suivis à 3 et 6 mois.</p>
+            <form method="post" action="/projets/<%= p.id %>/sortie" data-confirmer="Clôturer l'incubation de ce projet ?">
+              <input type="hidden" name="_csrf" value="<%= csrf %>">
+              <button class="btn secondaire bloc" type="submit">Clôturer l'incubation</button>
+            </form>
+          </div>
+        <% } %>
+
+        <% if (suivis.length) { %>
+          <div class="carte" id="suivis">
+            <h3>Suivi post-incubation</h3>
+            <% suivis.forEach(function (s) { %>
+              <div style="padding:10px 0;border-bottom:1px solid var(--creme-2)">
+                <div class="ligne entre"><strong><%= ref.ECHEANCES_SUIVI[s.echeance] %></strong>
+                  <span class="badge <%= s.date_realisee ? 'vert' : s.date_prevue < aujourdhui() ? 'rouge' : 'orange' %>"><%= s.date_realisee ? 'Réalisé' : 'Prévu le ' + formatDate(s.date_prevue) %></span>
+                </div>
+                <% if (s.date_realisee) { %>
+                  <div class="petit">Le <%= formatDate(s.date_realisee) %> · activité <strong><%= ref.STATUTS_ACTIVITE[s.statut_activite] %></strong> · CA <%= formatMontant(s.chiffre_affaires) %> · <%= s.emplois_crees ?? 0 %> emploi(s)</div>
+                  <% if (s.observations) { %><div class="petit muted"><%= s.observations %></div><% } %>
+                <% } else if (pilote) { %>
+                  <details><summary>Renseigner ce suivi</summary>
+                    <form method="post" action="/suivis/<%= s.id %>" style="margin-top:8px">
+                      <input type="hidden" name="_csrf" value="<%= csrf %>">
+                      <div class="champ"><label for="sr-<%= s.id %>" class="obligatoire">Date de l'entretien</label><input id="sr-<%= s.id %>" name="date_realisee" type="date" required></div>
+                      <div class="champ"><label for="sa-<%= s.id %>" class="obligatoire">Activité</label>
+                        <select id="sa-<%= s.id %>" name="statut_activite" required><% Object.entries(ref.STATUTS_ACTIVITE).forEach(function (a) { %><option value="<%= a[0] %>"><%= a[1] %></option><% }) %></select></div>
+                      <div class="champ"><label for="ca-<%= s.id %>">Chiffre d'affaires (FCFA)</label><input id="ca-<%= s.id %>" name="chiffre_affaires" type="number" min="0"></div>
+                      <div class="champ"><label for="em-<%= s.id %>">Emplois créés</label><input id="em-<%= s.id %>" name="emplois_crees" type="number" min="0"></div>
+                      <div class="champ"><label for="ob-<%= s.id %>">Observations</label><textarea id="ob-<%= s.id %>" name="observations" maxlength="2000" style="min-height:70px"></textarea></div>
+                      <button class="btn petit" type="submit">Enregistrer</button>
+                    </form>
+                  </details>
+                <% } %>
+              </div>
+            <% }) %>
+          </div>
+        <% } %>
+      </aside>
+    </div>
+    <% } %>
+  </section>
+  <% } %>
+
+  <!-- ============ COMPTES RENDUS ============ -->
+  <% if (!estEval && (crVisibles.length || pilote)) { %>
+  <section id="panneau-comptes-rendus" class="panneau" role="tabpanel" hidden>
+    <div class="carte">
+      <div class="carte-titre">
+        <h2>Comptes rendus</h2>
+        <% if (pilote && p.statut !== 'brouillon') { %><a class="btn" href="/projets/<%= p.id %>/comptes-rendus/nouveau">+ Nouveau compte rendu</a><% } %>
+      </div>
+      <% if (!crVisibles.length) { %><p class="muted mb-0">Aucun compte rendu.</p><% } else { %>
+      <div class="tableau-wrap">
+        <table class="responsive">
+          <thead><tr><th>Titre</th><th>Type</th><th>Statut</th><th>Auteur</th><th>Date</th></tr></thead>
+          <tbody>
+            <% crVisibles.forEach(function (c) { %>
+              <tr>
+                <td data-label="Titre"><a href="/comptes-rendus/<%= c.id %>"><%= c.titre %></a> <% if (c.genere_par_ia) { %><span class="badge ia">assisté par IA</span><% } %></td>
+                <td data-label="Type"><%= ref.TYPES_CR[c.type_cr] %></td>
+                <td data-label="Statut"><span class="badge <%= c.statut === 'valide' ? 'vert' : 'orange' %>"><%= c.statut === 'valide' ? 'Validé' : 'Brouillon' %></span></td>
+                <td data-label="Auteur"><%= c.auteur %></td>
+                <td data-label="Date"><%= formatDate(c.cree_le) %></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+      <% } %>
+    </div>
+  </section>
+  <% } %>
+</div>
+<%- include('../partials/bas') %>

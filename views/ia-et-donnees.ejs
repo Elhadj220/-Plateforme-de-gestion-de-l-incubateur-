@@ -1,0 +1,41 @@
+<%- include('partials/haut') %>
+<div class="conteneur etroit">
+  <h1>Usage de l'IA et protection des données</h1>
+  <p class="muted">Ce que fait l'intelligence artificielle dans Incub'ISEP, ce qu'elle ne fait pas, et comment vos données sont protégées.</p>
+
+  <div class="carte pile">
+    <section>
+      <h2>Où l'IA générative est-elle utilisée ?</h2>
+      <p>La plateforme utilise le modèle <strong>Google Gemini</strong> pour trois tâches d'assistance :</p>
+      <ul>
+        <li><strong>Pré-analyse des dossiers</strong> pour le comité de sélection : synthèse, points forts, points de vigilance, questions à poser.</li>
+        <li><strong>Brouillons de comptes rendus</strong> (suivi, mentorat, procès-verbal du comité, sortie d'incubation) à partir des données du projet.</li>
+        <li><strong>Propositions de jalons</strong> pour aider le mentor à construire le calendrier d'incubation.</li>
+      </ul>
+    </section>
+    <section>
+      <h2>Ce que l'IA ne fait pas</h2>
+      <ul>
+        <li>Elle <strong>ne note pas</strong> les dossiers et <strong>ne prend aucune décision</strong> : l'évaluation et la sélection restent humaines.</li>
+        <li>Rien n'est enregistré sans relecture : un compte rendu généré reste un brouillon modifiable jusqu'à sa validation par un mentor ou le coordonnateur ; les jalons proposés doivent être sélectionnés un par un.</li>
+        <li>Il lui est demandé de n'utiliser que les informations du dossier et d'écrire « Information non renseignée » plutôt que d'inventer.</li>
+      </ul>
+    </section>
+    <section>
+      <h2>Quelles données sont transmises ?</h2>
+      <p>Seules les informations décrivant le projet (titre, domaine, résumé, problème, solution, marché, jalons, objectifs, commentaires). <strong>Les noms, adresses e-mail, numéros de téléphone et documents déposés ne sont jamais transmis.</strong> Chaque appel est enregistré dans un journal consultable par le coordonnateur.</p>
+      <p>Si le service d'IA est indisponible, un brouillon structuré est préparé localement à partir des données du projet, et cela est signalé clairement.</p>
+    </section>
+    <section>
+      <h2>Protection des données personnelles</h2>
+      <ul>
+        <li>Les données sont utilisées uniquement pour la gestion de l'incubateur du CIAT.</li>
+        <li>Mots de passe stockés sous forme d'empreinte (bcrypt) ; sessions protégées ; protection contre la falsification de requêtes.</li>
+        <li>Les documents sont stockés hors de l'espace public et ne sont accessibles qu'aux personnes habilitées.</li>
+        <li>Les analyses statistiques sont présentées sous forme agrégée.</li>
+        <li>Conformément à la loi sénégalaise n° 2008-12 sur la protection des données à caractère personnel, vous pouvez demander l'accès, la rectification ou la suppression de vos données auprès du coordonnateur du CIAT.</li>
+      </ul>
+    </section>
+  </div>
+</div>
+<%- include('partials/bas') %>

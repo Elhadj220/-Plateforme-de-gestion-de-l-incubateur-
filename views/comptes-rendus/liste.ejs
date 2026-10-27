@@ -1,0 +1,27 @@
+<%- include('../partials/haut') %>
+<div class="conteneur">
+  <div class="titre-page"><div><h1>Comptes rendus</h1><p class="sous-titre"><%= liste.length %> document(s)</p></div></div>
+  <%- include('../partials/flash') %>
+  <% if (!liste.length) { %>
+    <div class="carte vide"><p class="mb-0">Aucun compte rendu. Créez-en un depuis l'onglet « Comptes rendus » d'un projet.</p></div>
+  <% } else { %>
+  <div class="tableau-wrap">
+    <table class="responsive">
+      <thead><tr><th>Titre</th><th>Projet</th><th>Type</th><th>Statut</th><th>Auteur</th><th>Date</th></tr></thead>
+      <tbody>
+        <% liste.forEach(function (c) { %>
+          <tr>
+            <td data-label="Titre"><a href="/comptes-rendus/<%= c.id %>"><%= c.titre %></a> <% if (c.genere_par_ia) { %><span class="badge ia">IA</span><% } %></td>
+            <td data-label="Projet"><a href="/projets/<%= c.projet_id %>"><%= c.projet_titre %></a></td>
+            <td data-label="Type"><%= ref.TYPES_CR[c.type_cr] %></td>
+            <td data-label="Statut"><span class="badge <%= c.statut === 'valide' ? 'vert' : 'orange' %>"><%= c.statut === 'valide' ? 'Validé' : 'Brouillon' %></span></td>
+            <td data-label="Auteur"><%= c.auteur %></td>
+            <td data-label="Date"><%= formatDate(c.cree_le) %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+  <% } %>
+</div>
+<%- include('../partials/bas') %>

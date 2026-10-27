@@ -1,0 +1,32 @@
+<%- include('../partials/haut') %>
+<div class="conteneur">
+  <div class="fil"><a href="/projets/<%= p.id %>?onglet=suivi"><%= p.titre %></a> › Jalons proposés</div>
+  <div class="titre-page">
+    <div><h1>Jalons proposés <span class="badge ia">IA générative</span></h1><p class="sous-titre">Sélectionnez, corrigez puis ajoutez les jalons pertinents. Rien n'est enregistré sans votre validation.</p></div>
+  </div>
+  <% if (source === 'gemini') { %>
+    <div class="flash info" role="status">Propositions générées par Google Gemini à partir des données du projet. Vérifiez leur réalisme et adaptez les échéances.</div>
+  <% } else { %>
+    <div class="flash info" role="status">IA indisponible<%= erreur ? ' (' + erreur + ')' : '' %> : voici un calendrier type établi à partir du stade du projet.</div>
+  <% } %>
+
+  <form method="post" action="/projets/<%= p.id %>/jalons/lot" class="carte">
+    <input type="hidden" name="_csrf" value="<%= csrf %>">
+    <input type="hidden" name="nombre" value="<%= jalons.length %>">
+    <% jalons.forEach(function (j, i) { %>
+      <fieldset>
+        <legend><label class="case"><input type="checkbox" name="garder_<%= i %>" value="1" checked> Garder ce jalon</label></legend>
+        <div class="grille g-21" style="gap:0 16px">
+          <div class="champ"><label for="t<%= i %>">Titre</label><input id="t<%= i %>" name="titre_<%= i %>" type="text" maxlength="120" value="<%= j.titre %>"></div>
+          <div class="champ"><label for="d<%= i %>">Échéance</label><input id="d<%= i %>" name="date_<%= i %>" type="date" value="<%= j.date_echeance %>"></div>
+        </div>
+        <div class="champ mb-0"><label for="ds<%= i %>">Preuve attendue</label><input id="ds<%= i %>" name="description_<%= i %>" type="text" maxlength="500" value="<%= j.description %>"></div>
+      </fieldset>
+    <% }) %>
+    <div class="actions">
+      <button class="btn" type="submit">Ajouter les jalons sélectionnés</button>
+      <a class="btn secondaire" href="/projets/<%= p.id %>?onglet=suivi">Annuler</a>
+    </div>
+  </form>
+</div>
+<%- include('../partials/bas') %>

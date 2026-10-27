@@ -1,0 +1,57 @@
+<%- include('../partials/haut') %>
+<div class="conteneur">
+  <div class="titre-page">
+    <div><h1>Comité de sélection</h1><p class="sous-titre">Dossiers à évaluer avec la grille pondérée du CIAT.</p></div>
+  </div>
+  <%- include('../partials/flash') %>
+
+  <div class="grille g-2" style="margin-bottom:20px">
+    <div class="kpi <%= aEvaluer.length ? '' : 'ok' %>"><div class="valeur"><%= aEvaluer.length %></div><div class="libelle">Dossiers en attente de votre évaluation</div></div>
+    <div class="kpi ok"><div class="valeur"><%= evalues.length %></div><div class="libelle">Dossiers que vous avez évalués</div></div>
+  </div>
+
+  <div class="carte" style="margin-bottom:18px">
+    <h2>À évaluer</h2>
+    <% if (!aEvaluer.length) { %><p class="muted mb-0">Aucun dossier en attente. Merci pour votre contribution !</p><% } else { %>
+    <div class="tableau-wrap">
+      <table class="responsive">
+        <thead><tr><th>Projet</th><th>Domaine</th><th>Soumis le</th><th>Évaluations</th><th></th></tr></thead>
+        <tbody>
+          <% aEvaluer.forEach(function (p) { %>
+            <tr>
+              <td data-label="Projet"><strong><%= p.titre %></strong><div class="petit muted"><%= tronquer(p.resume, 110) %></div></td>
+              <td data-label="Domaine"><%= p.domaine %></td>
+              <td data-label="Soumis le"><%= formatDate(p.date_soumission) %></td>
+              <td data-label="Évaluations"><%= p.nb_eval %></td>
+              <td><a class="btn petit" href="/projets/<%= p.id %>/evaluation">Évaluer</a></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+    <% } %>
+  </div>
+
+  <div class="carte">
+    <h2>Mes évaluations</h2>
+    <% if (!evalues.length) { %><p class="muted mb-0">Vous n'avez encore évalué aucun dossier.</p><% } else { %>
+    <div class="tableau-wrap">
+      <table class="responsive">
+        <thead><tr><th>Projet</th><th>Statut actuel</th><th class="num">Score</th><th>Avis</th><th>Date</th></tr></thead>
+        <tbody>
+          <% evalues.forEach(function (e) { %>
+            <tr>
+              <td data-label="Projet"><a href="/projets/<%= e.id %>?onglet=evaluation"><%= e.titre %></a></td>
+              <td data-label="Statut"><%- include('../partials/statut', { statut: e.statut }) %></td>
+              <td data-label="Score" class="num"><%= e.score %> / 100</td>
+              <td data-label="Avis"><span class="badge <%= e.recommandation === 'favorable' ? 'vert' : e.recommandation === 'reserve' ? 'orange' : 'rouge' %>"><%= ref.RECOMMANDATIONS[e.recommandation] %></span></td>
+              <td data-label="Date"><%= formatDate(e.evalue_le) %></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+    <% } %>
+  </div>
+</div>
+<%- include('../partials/bas') %>

@@ -1,0 +1,33 @@
+<%- include('../partials/haut') %>
+<div class="conteneur">
+  <div class="fil"><a href="/projets/<%= p.id %>?onglet=comptes-rendus"><%= p.titre %></a> › Compte rendu</div>
+  <div class="titre-page">
+    <div>
+      <h1><%= cr.titre %></h1>
+      <p class="sous-titre">
+        <%= ref.TYPES_CR[cr.type_cr] %> ·
+        <span class="badge <%= cr.statut === 'valide' ? 'vert' : 'orange' %>"><%= cr.statut === 'valide' ? 'Validé' : 'Brouillon' %></span>
+        <% if (cr.genere_par_ia) { %><span class="badge ia">assisté par IA</span><% } %>
+      </p>
+    </div>
+    <div class="ligne">
+      <% if (modifiable) { %><a class="btn secondaire" href="/comptes-rendus/<%= cr.id %>/modifier">Modifier</a><% } %>
+      <a class="btn secondaire" href="/comptes-rendus/<%= cr.id %>/pdf">Télécharger en PDF</a>
+      <% if (validable) { %>
+        <form method="post" action="/comptes-rendus/<%= cr.id %>/valider" class="en-ligne" data-confirmer="Valider ce compte rendu ? Il ne pourra plus être modifié.">
+          <input type="hidden" name="_csrf" value="<%= csrf %>">
+          <button class="btn succes" type="submit">Valider</button>
+        </form>
+      <% } %>
+    </div>
+  </div>
+  <%- include('../partials/flash') %>
+  <% if (cr.statut === 'brouillon' && cr.genere_par_ia) { %>
+    <div class="encart ia" style="margin-bottom:16px">Ce document a été initialement rédigé par l'IA. Il doit être relu attentivement avant validation.</div>
+  <% } %>
+  <article class="document">
+    <%- markdownVersHtml(cr.contenu) %>
+  </article>
+  <p class="petit muted" style="margin-top:12px">Rédigé par <%= cr.auteur_nom %> le <%= formatDateHeure(cr.cree_le) %><% if (cr.valide_par_nom) { %> · validé par <%= cr.valide_par_nom %><% } %>.</p>
+</div>
+<%- include('../partials/bas') %>

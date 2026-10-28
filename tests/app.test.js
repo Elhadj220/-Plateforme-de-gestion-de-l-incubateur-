@@ -329,6 +329,9 @@ test('exports PDF et Excel du tableau de bord et de la fiche projet', async () =
   assert.ok(xlsx.type.includes('spreadsheetml'));
   const buf = Buffer.from(await xlsx.res.arrayBuffer());
   assert.equal(buf.subarray(0, 2).toString(), 'PK');
+  const filtreCohorte = await c.get('/coordination/tableau-de-bord?cohorte=1');
+  assert.equal(filtreCohorte.status, 200);
+  assert.ok(filtreCohorte.texte.includes('Filtre « cohorte » actif'));
   const pdf = await c.get('/coordination/export.pdf');
   assert.equal(pdf.type, 'application/pdf');
   assert.equal(Buffer.from(await pdf.res.arrayBuffer()).subarray(0, 5).toString(), '%PDF-');

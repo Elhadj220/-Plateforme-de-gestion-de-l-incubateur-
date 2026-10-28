@@ -46,6 +46,7 @@ async function appelerModele(modele, prompt, { json = false, temperature = 0.4 }
   } catch (err) {
     const e = new Error(err.name === 'TimeoutError' ? `${modele} : délai dépassé` : `${modele} : réseau indisponible (${err.cause?.code || err.message})`);
     e.reessayable = true;
+    e.coupure = err.name !== 'TimeoutError'; // coupure de connexion : le même modèle peut être retenté
     throw e;
   }
   const data = await res.json().catch(() => ({}));
@@ -73,14 +74,20 @@ async function appelerGemini(prompt, options) {
   if (!config.gemini.apiKey) throw new Error('Clé GEMINI_API_KEY absente');
   const erreurs = [];
   const debut = Date.now();
-  for (const modele of config.gemini.modeles) {
-    // Au-delà de 60 s cumulées, on n'essaie plus d'autre modèle : l'utilisateur attend.
+  // Une coupure réseau sur un modèle donne droit à une seconde tentative sur ce même modèle.
+  const essais = config.gemini.modeles.flatMap((m) => [m, m]);
+  let precedent = null;
+  for (let i = 0; i < essais.length; i += 1) {
+    const modele = essais[i];
+    if (modele === precedent?.modele && !precedent.coupure) continue;
+    // Au-delà de 60 s cumulées, on n'essaie plus : l'utilisateur attend.
     if (erreurs.length && Date.now() - debut > 60000) break;
     try {
       return { texte: await appelerModele(modele, prompt, options), modele };
     } catch (err) {
       erreurs.push(err.message);
       if (!err.reessayable) break;
+      precedent = { modele, coupure: !!err.coupure };
     }
   }
   throw new Error(erreurs.join(' ; '));

@@ -37,11 +37,14 @@
 
   <% const k = d.kpi; %>
   <h2>Sélection</h2>
+  <% if (filtres.cohorte) { %>
+    <div class="encart" style="margin-bottom:14px">Filtre « cohorte » actif : seuls les projets affectés à une cohorte, c'est-à-dire déjà sélectionnés, sont retenus. Les taux de sélection ne sont donc pas significatifs avec ce filtre ; utilisez le domaine ou la période pour analyser la sélection.</div>
+  <% } %>
   <div class="grille g-4" style="margin-bottom:24px">
     <div class="kpi"><div class="valeur"><%= k.recus %></div><div class="libelle">Dossiers reçus</div><div class="detail">Dossiers soumis (hors brouillons)</div></div>
     <div class="kpi"><div class="valeur"><%= k.enAttente %></div><div class="libelle">En attente de décision</div><div class="detail">Statuts « soumis » et « en évaluation »</div></div>
     <div class="kpi"><div class="valeur"><%= k.selectionnes %></div><div class="libelle">Projets sélectionnés</div><div class="detail">Retenus, en incubation ou terminés</div></div>
-    <div class="kpi"><div class="valeur"><%= k.tauxSelection %> %</div><div class="libelle">Taux de sélection</div><div class="detail">Sélectionnés / dossiers ayant reçu une décision</div></div>
+    <div class="kpi"><div class="valeur"><%= filtres.cohorte ? '—' : k.tauxSelection + ' %' %></div><div class="libelle">Taux de sélection</div><div class="detail">Sélectionnés / dossiers ayant reçu une décision</div></div>
   </div>
 
   <h2>Incubation et résultats</h2>
@@ -73,7 +76,7 @@
       <div class="carte-titre"><h3>Répartition des candidatures par genre</h3><button class="btn petit secondaire" type="button" data-export-image="g-genre">Image PNG</button></div>
       <div class="graphique"><canvas id="g-genre" role="img" aria-label="Répartition par genre du porteur"></canvas></div>
       <% const f = d.parGenre.find(function (g) { return g.genre === 'F'; }) || { recus: 0, selectionnes: 0 }; const m = d.parGenre.find(function (g) { return g.genre === 'M'; }) || { recus: 0, selectionnes: 0 }; %>
-      <p class="petit muted" style="margin-top:10px">Taux de sélection : femmes <%= f.recus ? Math.round((f.selectionnes / f.recus) * 100) : 0 %> % · hommes <%= m.recus ? Math.round((m.selectionnes / m.recus) * 100) : 0 %> % (sélectionnés / reçus).</p>
+      <% if (!filtres.cohorte) { %><p class="petit muted" style="margin-top:10px">Taux de sélection : femmes <%= f.recus ? Math.round((f.selectionnes / f.recus) * 100) : 0 %> % · hommes <%= m.recus ? Math.round((m.selectionnes / m.recus) * 100) : 0 %> % (sélectionnés / reçus).</p><% } %>
     </div>
     <div class="carte">
       <div class="carte-titre"><h3>Dossiers soumis par mois (12 derniers mois)</h3><button class="btn petit secondaire" type="button" data-export-image="g-mois">Image PNG</button></div>
